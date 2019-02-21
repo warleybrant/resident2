@@ -1,0 +1,2 @@
+Cloud Firestore
+Abrir ios/Runner.xcworkspace no Xcode e inserir o GoogleService-Info.plist em ios/Runner
