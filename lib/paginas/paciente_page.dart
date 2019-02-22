@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:resident/componentes/bubble.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/paginas/home_page.dart';
+import 'package:resident/utils/tela.dart';
 
 class PacientePage extends StatefulWidget {
   final PageController pagina;
@@ -31,10 +32,11 @@ class _PacientePageState extends State<PacientePage> {
   }
 
   Widget corpo() {
-    return Column(
+    return Stack(
+      fit: StackFit.passthrough,
       children: <Widget>[
         Container(
-          height: MediaQuery.of(context).size.height * .85,
+          height: Tela.y(context, 90),
           color: Colors.teal,
           child: ListView(
             shrinkWrap: true,
@@ -55,38 +57,51 @@ class _PacientePageState extends State<PacientePage> {
             ],
           ),
         ),
-        SizedBox(
-          height: MediaQuery.of(context).size.height * .01,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: <Widget>[
-            Material(
-              color: Colors.white,
-              shape: StadiumBorder(),
-              child: Container(
-                width: MediaQuery.of(context).size.width * .8,
-                height: MediaQuery.of(context).size.height * .06,
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: <Widget>[
-//                    TextFormField(
-//                      decoration: InputDecoration(),
-//                    ),
-                    IconButton(
-                      color: Colors.blue,
-                      icon: Icon(Icons.mic),
-                      onPressed: () {},
-                    )
-                  ],
+        Positioned(
+          bottom: 0,
+          left: Tela.x(context, 2.5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              Material(
+                color: Colors.white,
+                shape: StadiumBorder(),
+                child: Container(
+                  width: Tela.x(context, 85),
+                  height: Tela.y(context, 5),
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 15),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: <Widget>[
+                        Flexible(
+                          child: TextField(
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Digite aqui'),
+                          ),
+                        ),
+                        IconButton(
+                          color: Colors.black,
+                          icon: Icon(Icons.attach_file),
+                          onPressed: () {},
+                        ),
+                        IconButton(
+                          color: Colors.black,
+                          icon: Icon(Icons.camera_alt),
+                          onPressed: () {},
+                        )
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-            IconButton(
-              icon: Icon(Icons.arrow_forward),
-              onPressed: () {},
-            )
-          ],
+              IconButton(
+                icon: Icon(Icons.arrow_forward),
+                onPressed: () {},
+              )
+            ],
+          ),
         )
       ],
     );
