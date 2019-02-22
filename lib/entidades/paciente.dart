@@ -123,12 +123,12 @@ class Paciente {
   }
 
   void alteraMensagem(DocumentSnapshot documento, Mensagem mensagem) {
-    mensagem.autor = documento.data['autor'];
+    mensagem.autor = Usuario.buscaPorId(documento.data['autor']);
     mensagem.anexo = Anexo.buscaPorId(
       documento.data['anexo'],
     );
     mensagem.horaCriacao =
-        DateTime.fromMillisecondsSinceEpoch(documento.data['horaCriacao']);
+        Ferramentas.millisecondsParaData(documento.data['horaCriacao']);
     mensagem.paciente = Paciente.buscaPorId(documento.data['paciente']);
     mensagem.texto = documento.data['texto'];
     mensagem.tipo = documento.data['tipo'];

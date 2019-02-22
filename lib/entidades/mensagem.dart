@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:resident/entidades/anexo.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
+import 'package:resident/utils/ferramentas.dart';
 
 class Mensagem {
   static List<Mensagem> lista = [];
@@ -9,7 +11,7 @@ class Mensagem {
   Anexo anexo;
   DateTime horaCriacao;
   Paciente paciente;
-  TipoMensagem tipo;
+  String tipo;
   Usuario autor;
 
   Mensagem(
@@ -19,7 +21,11 @@ class Mensagem {
       this.horaCriacao,
       this.paciente,
       this.tipo,
-      this.autor});
+      this.autor}) {
+    if (horaCriacao == null) horaCriacao = DateTime.now();
+    if (autor == null) autor = Usuario.logado;
+    if (tipo == null) tipo = TipoMensagem.TEXTO;
+  }
 
   static Mensagem buscaPorId(String documentID) {
     return lista.firstWhere((mensagem) => mensagem.id == documentID,
@@ -32,6 +38,36 @@ class Mensagem {
       if (mensagem.paciente.id == paciente.id) msgs.add(mensagem);
     });
     return msgs;
+  }
+
+  void salvar() {
+    if (id == null) {
+      _criar();
+      return;
+    }
+    _alterar();
+  }
+
+  Future<Null> _criar() {
+    var documento = Firestore.instance.collection('mensagens').document();
+    id = documento.documentID;
+    setData(documento);
+  }
+
+  Future<Null> _alterar() {
+    var documento = Firestore.instance.collection('mensagens').document(id);
+    setData(documento);
+  }
+
+  void setData(DocumentReference documento) {
+    documento.setData({
+      'texto': texto,
+      'tipo': tipo,
+      'autor': autor.id,
+      'horaCriacao': Ferramentas.dataParaMillisseconds(horaCriacao),
+      'anexo': anexo != null ? anexo.id : null,
+      'paciente': paciente.id
+    });
   }
 }
 

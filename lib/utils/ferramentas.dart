@@ -8,6 +8,11 @@ class Ferramentas {
 
   static formatarData(DateTime horaCriacao) {
     if (horaCriacao == null) return '';
-    DateFormat('HH:mm').format(horaCriacao);
+    return DateFormat('HH:mm').format(horaCriacao);
+  }
+
+  static int dataParaMillisseconds(DateTime data) {
+    if (data == null) return -1;
+    return data.millisecondsSinceEpoch;
   }
 }

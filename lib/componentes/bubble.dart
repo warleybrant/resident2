@@ -49,7 +49,7 @@ class Bubble extends StatelessWidget {
                 right: 0.0,
                 child: Row(
                   children: <Widget>[
-                    Text(time,
+                    Text(time != null ? time : '',
                         style: TextStyle(
                           color: Colors.black38,
                           fontSize: 10.0,
