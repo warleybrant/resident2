@@ -9,6 +9,7 @@ import 'package:resident/paginas/grupos_page.dart';
 import 'package:resident/paginas/login.dart';
 import 'package:resident/paginas/paciente_page.dart';
 import 'package:resident/paginas/pacientes_page.dart';
+import 'package:resident/utils/nucleo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -26,6 +27,7 @@ class HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    Nucleo.state = this;
     manterUsuarios();
     super.initState();
   }
@@ -161,9 +163,10 @@ class HomePageState extends State<HomePage> {
         snap.documents.forEach((documento) {
           Paciente paciente = Paciente.buscaPorId(documento.documentID);
           if (paciente == null)
-            adicionarPaciente(documento);
+            paciente = adicionarPaciente(documento);
           else
             alterarPaciente(documento, paciente);
+          paciente.manterMensagens();
         });
         atualizaTela();
       });
@@ -194,20 +197,20 @@ class HomePageState extends State<HomePage> {
 
   /// Adiciona um paciente à lista estática de pacientes baseado
   /// no retorno do firebase
-  void adicionarPaciente(DocumentSnapshot documento) {
-    Paciente.lista.add(
-      Paciente(
-        id: documento.documentID,
-        nome: documento.data['nome'],
-        grupo: Grupo.buscaPorId(documento.data['grupo']),
-        telefone: documento.data['telefone'],
-        entrada: DateTime.fromMillisecondsSinceEpoch(documento.data['entrada']),
-        hp: documento.data['hp'],
-        hda: documento.data['hda'],
-        hd: documento.data['hd'],
-        alta: documento.data['alta'],
-      ),
+  Paciente adicionarPaciente(DocumentSnapshot documento) {
+    Paciente paciente = Paciente(
+      id: documento.documentID,
+      nome: documento.data['nome'],
+      grupo: Grupo.buscaPorId(documento.data['grupo']),
+      telefone: documento.data['telefone'],
+      entrada: DateTime.fromMillisecondsSinceEpoch(documento.data['entrada']),
+      hp: documento.data['hp'],
+      hda: documento.data['hda'],
+      hd: documento.data['hd'],
+      alta: documento.data['alta'],
     );
+    Paciente.lista.add(paciente);
+    return paciente;
   }
 
   /// Altera um paciente da lista estática de pacientes baseado

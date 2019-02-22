@@ -30,6 +30,7 @@ dependencies:
   flutter_masked_text: ^0.7.0
   shared_preferences: 0.4.3
   cached_network_image: 0.5.1
+  intl: ^0.15.7
 
 dev_dependencies:
   flutter_test:

@@ -6,4 +6,9 @@ class Anexo {
   String identificacao;
   String urlDownload;
   File arquivo;
+
+  static buscaPorId(String documentID) {
+    return lista.firstWhere((anexo) => anexo.id == documentID,
+        orElse: () => null);
+  }
 }

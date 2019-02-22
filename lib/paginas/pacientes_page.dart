@@ -81,7 +81,7 @@ class _PacientesPageState extends State<PacientesPage> {
       child: Icon(Icons.build),
       onPressed: () {
         Paciente.mostrado = paciente;
-        widget.pagina.jumpToPage(Paginas.GRUPO);
+        widget.pagina.jumpToPage(Paginas.PACIENTE);
       },
     );
     List<Widget> lista = [fotoGrupo, textoGrupo, configuracoesGrupo];
