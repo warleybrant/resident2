@@ -11,7 +11,9 @@ class Grupo {
   String urlFoto;
   List<dynamic> contatos;
 
-  Grupo({this.id, this.nome, this.descricao, this.contatos, this.urlFoto});
+  Grupo({this.id, this.nome, this.descricao, this.contatos, this.urlFoto}) {
+    if (contatos == null) contatos = [];
+  }
 
   void salvar() {
     if (id == null) {
@@ -33,7 +35,7 @@ class Grupo {
 
   static List<dynamic> todosIds() {
     List<dynamic> ids = [];
-    lista.forEach((grupo){
+    lista.forEach((grupo) {
       ids.add(grupo.id);
     });
     return ids;
@@ -63,5 +65,10 @@ class Grupo {
     return lista.firstWhere((grupo) {
       return grupo.id == id;
     }, orElse: () => null);
+  }
+
+  void setContatosPelosIds(List<String> contatosSelecionados) {
+    contatos.clear();
+    contatos.addAll(contatosSelecionados);
   }
 }

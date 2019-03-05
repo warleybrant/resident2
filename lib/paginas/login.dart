@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
   FirebaseUser usuario;
   TextEditingController _smsCodeController = TextEditingController();
   var telefoneController =
-  new MaskedTextController(mask: '+55 (00) 00000-0000', text: '+55');
+      new MaskedTextController(mask: '+55 (00) 00000-0000', text: '+55');
   final String testSmsCode = '888888';
 
   @override
@@ -32,12 +32,12 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
-        child: colunaWidgets(),
+        child: listaContatosWidgets(),
       ),
     );
   }
 
-  Widget colunaWidgets() {
+  Widget listaContatosWidgets() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.center,

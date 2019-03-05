@@ -4,7 +4,7 @@ import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/paginas/contatos.dart';
-import 'package:resident/paginas/grupo_page.dart';
+import 'package:resident/paginas/grupo_page_config.dart';
 import 'package:resident/paginas/grupos_page.dart';
 import 'package:resident/paginas/login.dart';
 import 'package:resident/paginas/paciente_page.dart';
@@ -265,7 +265,7 @@ class HomePageState extends State<HomePage> {
 class Paginas {
   static const int LOGIN = 0;
   static const int GRUPOS = 1;
-  static const int GRUPO = 2;
+  static const int GRUPO_CONFIG = 2;
   static const int CONTATOS = 3;
   static const int PACIENTES = 4;
   static const int PACIENTE = 5;

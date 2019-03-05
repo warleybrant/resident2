@@ -15,4 +15,8 @@ class Ferramentas {
     if (data == null) return -1;
     return data.millisecondsSinceEpoch;
   }
+
+  static String soNumeros(String str) {
+    return str.replaceAll(new RegExp(r'[^\d]'), '');
+  }
 }

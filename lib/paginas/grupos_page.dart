@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/paginas/home_page.dart';
+import 'package:resident/utils/cores.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GruposPage extends StatefulWidget {
@@ -26,20 +27,19 @@ class _GruposPageState extends State<GruposPage> {
           children: drawerItens(),
         ),
       ),
-      persistentFooterButtons: <Widget>[
-        FloatingActionButton(
-            backgroundColor: Colors.deepOrangeAccent,
-            elevation: 8,
-            child: Icon(
-              Icons.add,
-              color: Colors.white,
-            ),
-            onPressed: () {
-              Grupo.mostrado = null;
-              widget.pagina.jumpToPage(Paginas.GRUPO);
+      floatingActionButton: FloatingActionButton(
+          backgroundColor: Color(Cores.FLOATING_BUTTON_BACKGROUND),
+          foregroundColor: Color(Cores.FLOATING_BUTTON_FOREGROUND),
+          elevation: 8,
+          child: Icon(
+            Icons.add,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            Grupo.mostrado = null;
+            widget.pagina.jumpToPage(Paginas.GRUPO_CONFIG);
 //              deslogar();
-            })
-      ],
+          }),
     );
   }
 
@@ -115,7 +115,7 @@ class _GruposPageState extends State<GruposPage> {
       child: Icon(Icons.build),
       onPressed: () {
         Grupo.mostrado = grupo;
-        widget.pagina.jumpToPage(Paginas.GRUPO);
+        widget.pagina.jumpToPage(Paginas.GRUPO_CONFIG);
       },
     );
     List<Widget> lista = [fotoGrupo, textoGrupo, configuracoesGrupo];
