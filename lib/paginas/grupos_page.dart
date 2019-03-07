@@ -1,5 +1,5 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/cores.dart';
@@ -19,6 +19,7 @@ class _GruposPageState extends State<GruposPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 5,
         title: Text('Grupos'),
       ),
       body: listaGrupos(),
@@ -80,27 +81,7 @@ class _GruposPageState extends State<GruposPage> {
   }
 
   Widget cardGrupo(Grupo grupo) {
-    var foto = grupo.urlFoto != null
-        ? CachedNetworkImageProvider(grupo.urlFoto, errorListener: () {})
-        : null;
-
-    Widget fotoGrupo = foto != null
-        ? Container(
-            width: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                fit: BoxFit.fill,
-                image: foto,
-              ),
-            ),
-          )
-        : SizedBox(
-            width: 80,
-            child: CircleAvatar(
-              child: Icon(Icons.add_a_photo),
-            ),
-          );
+    var fotoGrupo = FotoCard(grupo.urlFoto, 80, 80);
     Widget textoGrupo = Expanded(
       child: MaterialButton(
           child: Text(grupo.nome),

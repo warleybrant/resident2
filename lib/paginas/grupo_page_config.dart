@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/paginas/home_page.dart';
@@ -19,21 +20,20 @@ class _GrupoPageState extends State<GrupoPage> {
   TextEditingController nomeGrupo = TextEditingController(text: '');
   Grupo grupo;
   GrupoEstado estado = GrupoEstado.CRIACAO;
-  List<String> contatosSelecionados = [];
+  List contatosSelecionados = null;
   final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
-    if (Grupo.mostrado == null) {
-      estado = GrupoEstado.CRIACAO;
-      Grupo.mostrado = Grupo();
-    } else
-      estado = GrupoEstado.ALTERACAO;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (contatosSelecionados == null) {
+      inicializarContatos();
+      inicializarEstado();
+    }
     return Scaffold(
       appBar: appBar(),
       body: corpo(),
@@ -45,6 +45,19 @@ class _GrupoPageState extends State<GrupoPage> {
             salvarGrupoESair();
           }),
     );
+  }
+
+  void inicializarEstado() {
+    if (Grupo.mostrado == null) {
+      estado = GrupoEstado.CRIACAO;
+      Grupo.mostrado = Grupo();
+    } else
+      estado = GrupoEstado.ALTERACAO;
+  }
+
+  void inicializarContatos() {
+    contatosSelecionados = [];
+    contatosSelecionados.addAll(Grupo.mostrado.contatos);
   }
 
   Widget appBar() {
@@ -75,7 +88,7 @@ class _GrupoPageState extends State<GrupoPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           nomeGrupoInput(),
-          btnAddContato(),
+//          btnAddContato(),
           listaContatosSelecionados()
         ],
       ),
@@ -95,8 +108,8 @@ class _GrupoPageState extends State<GrupoPage> {
               labelText: 'Digite o nome do grupo'),
           // The validator receives the text the user has typed in
           validator: (value) {
-            if (value.isEmpty) {
-              return 'Nome do grupo está em branco';
+            if (estado == GrupoEstado.CRIACAO) {
+              if (value.isEmpty) return 'Nome do grupo está em branco';
             }
           },
           controller: nomeGrupo,
@@ -118,7 +131,7 @@ class _GrupoPageState extends State<GrupoPage> {
       padding: EdgeInsets.symmetric(horizontal: Tela.x(context, 5)),
       child: Container(
         color: Colors.white12,
-        height: Tela.y(context, 40),
+        height: Tela.y(context, 60),
         child: ListView(
           children: contatosGrupo(),
         ),
@@ -128,31 +141,51 @@ class _GrupoPageState extends State<GrupoPage> {
 
   List<Widget> contatosGrupo() {
     List<Widget> lista = [];
-    Grupo.mostrado.getUsuariosContatos().forEach((contato) {
-      lista.add(Card(
-        child: CheckboxListTile(
-          title: Text(contato.getIdentificacao()),
-          value: contatosSelecionados.contains(contato.id),
-          onChanged: (_) {
-            setState(() {
-              if (_) {
-                if (!contatosSelecionados.contains(contato.id)) {
-                  contatosSelecionados.add(contato.id);
-                }
-              } else {
-                contatosSelecionados.remove(contato.id);
-              }
-            });
-          },
-        ),
-      ));
+    var contatosGrupo = Grupo.mostrado.getUsuariosContatos();
+    contatosGrupo.forEach((contato) {
+      lista.add(cardContato(contato));
+    });
+    Usuario.logado.usuariosContatos().forEach((Usuario logadoContato) {
+      if (!contatosGrupo.contains(logadoContato)) {
+        lista.add(cardContato(logadoContato));
+      }
     });
     return lista;
   }
 
+  Widget cardContato(Usuario contato) {
+    return Card(
+      child: CheckboxListTile(
+        title: Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            FotoCard(contato.urlFoto, 80, 80),
+            SizedBox(
+              width: 20,
+            ),
+            Text(contato.getIdentificacao())
+          ],
+        ),
+        value: contatosSelecionados.contains(contato.id),
+        onChanged: (_) {
+          setState(() {
+            if (_) {
+              if (!contatosSelecionados.contains(contato.id)) {
+                contatosSelecionados.add(contato.id);
+              }
+            } else {
+              contatosSelecionados.remove(contato.id);
+            }
+          });
+        },
+      ),
+    );
+  }
+
   void salvarGrupoESair() {
     if (_formKey.currentState.validate()) {
-      Grupo.mostrado.nome = nomeGrupo.text;
+      if (nomeGrupo.text.isNotEmpty) Grupo.mostrado.nome = nomeGrupo.text;
       if (!contatosSelecionados.contains(Usuario.logado.id))
         contatosSelecionados.add(Usuario.logado.id);
       Grupo.mostrado.setContatosPelosIds(contatosSelecionados);

@@ -7,6 +7,7 @@ import 'package:resident/paginas/contatos.dart';
 import 'package:resident/paginas/grupo_page_config.dart';
 import 'package:resident/paginas/grupos_page.dart';
 import 'package:resident/paginas/login.dart';
+import 'package:resident/paginas/paciente_config.dart';
 import 'package:resident/paginas/paciente_page.dart';
 import 'package:resident/paginas/pacientes_page.dart';
 import 'package:resident/utils/nucleo.dart';
@@ -50,7 +51,8 @@ class HomePageState extends State<HomePage> {
           GrupoPage(pagina),
           ContatosPage(pagina),
           PacientesPage(pagina),
-          PacientePage(pagina)
+          PacientePage(pagina),
+          PacienteConfigPage(pagina)
         ],
       ),
     );
@@ -269,6 +271,7 @@ class Paginas {
   static const int CONTATOS = 3;
   static const int PACIENTES = 4;
   static const int PACIENTE = 5;
+  static const int PACIENTE_CONFIG = 6;
   static PageController paginador;
 }
 

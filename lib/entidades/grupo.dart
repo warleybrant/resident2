@@ -67,8 +67,8 @@ class Grupo {
     }, orElse: () => null);
   }
 
-  void setContatosPelosIds(List<String> contatosSelecionados) {
-    contatos.clear();
-    contatos.addAll(contatosSelecionados);
+  void setContatosPelosIds(List contatosSelecionados) {
+    contatos = contatosSelecionados;
+//    contatos.addAll(contatosSelecionados);
   }
 }

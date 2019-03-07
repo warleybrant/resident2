@@ -27,6 +27,7 @@ class _PacientesPageState extends State<PacientesPage> {
             }),
       ),
       body: corpo(),
+      floatingActionButton: btnAddPaciente(),
     );
   }
 
@@ -100,5 +101,18 @@ class _PacientesPageState extends State<PacientesPage> {
         ),
       ),
     );
+  }
+
+  Widget btnAddPaciente() {
+    return FloatingActionButton(
+      child: Icon(Icons.add),
+      onPressed: () {
+        criarPaciente();
+      },
+    );
+  }
+
+  void criarPaciente() {
+    widget.pagina.jumpToPage(Paginas.PACIENTE_CONFIG);
   }
 }
