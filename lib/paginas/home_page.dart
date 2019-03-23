@@ -4,31 +4,94 @@ import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/paginas/contatos.dart';
+import 'package:resident/paginas/exames_page.dart';
 import 'package:resident/paginas/grupo_page_config.dart';
 import 'package:resident/paginas/grupos_page.dart';
+import 'package:resident/paginas/hd_page.dart';
+import 'package:resident/paginas/hda_page.dart';
+import 'package:resident/paginas/hp_page.dart';
 import 'package:resident/paginas/login.dart';
+import 'package:resident/paginas/medicamentos_page.dart';
 import 'package:resident/paginas/paciente_config.dart';
 import 'package:resident/paginas/paciente_page.dart';
 import 'package:resident/paginas/pacientes_page.dart';
-import 'package:resident/utils/nucleo.dart';
+import 'package:resident/paginas/perfil_page.dart';
+import 'package:resident/utils/ferramentas.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   static Grupo grupoExibido;
   static Usuario usuarioLogado;
 
+  static void mudarPagina(int pagina) {
+    HomePageState.pagina.jumpToPage(pagina);
+    atualizaTela();
+  }
+
+  static void atualizaTela() {
+    HomePageState.instancia.atualizaTela();
+  }
+
   @override
   HomePageState createState() => HomePageState();
 }
 
+class Paginas {
+  static const int LOGIN = 0;
+  static const int GRUPOS = 1;
+  static const int GRUPO_CONFIG = 2;
+  static const int CONTATOS = 3;
+  static const int PACIENTES = 4;
+  static const int PACIENTE = 5;
+  static const int PACIENTE_CONFIG = 6;
+  static const int PERFIL = 7;
+  static const int HP = 8;
+  static const int HD = 9;
+  static const int HDA = 10;
+  static const int EXAMES = 11;
+  static const int MEDICAMENTOS = 12;
+  static PageController paginador;
+}
+
 class HomePageState extends State<HomePage> {
-  PageController pagina = PageController(initialPage: 2);
+  static PageController pagina = PageController(initialPage: Paginas.GRUPOS);
+  static HomePageState instancia;
   int atualizacoes = 0;
   Estado estado = Estado.NORMAL;
 
+  static StatefulWidget loginPage = LoginPage();
+  static StatefulWidget gruposPage = GruposPage();
+  static StatefulWidget grupoPage = GrupoPage();
+  static StatefulWidget contatosPage = ContatosPage();
+  static StatefulWidget pacientesPage = PacientesPage();
+  static StatefulWidget pacientePage = PacientePage();
+  static StatefulWidget pacienteConfigPage = PacienteConfigPage();
+  static StatefulWidget perfilPage = PerfilPage();
+  static StatefulWidget hpPage = HPPage();
+  static StatefulWidget hdPage = HDPage();
+  static StatefulWidget hdaPage = HDAPage();
+  static StatefulWidget examesPage = ExamesPage();
+  static StatefulWidget medicamentosPage = MedicamentosPage();
+
   @override
   void initState() {
-    Nucleo.state = this;
+//    Nucleo.state = this;
+    instancia = this;
+    pagina.addListener(() {
+      loginPage = LoginPage();
+      gruposPage = GruposPage();
+      grupoPage = GrupoPage();
+      contatosPage = ContatosPage();
+      pacientesPage = PacientesPage();
+      pacientePage = PacientePage();
+      pacienteConfigPage = PacienteConfigPage();
+      perfilPage = PerfilPage();
+      hpPage = HPPage();
+      hdPage = HDPage();
+      hdaPage = HDAPage();
+      examesPage = ExamesPage();
+      medicamentosPage = MedicamentosPage();
+    });
     manterUsuarios();
     super.initState();
   }
@@ -46,13 +109,19 @@ class HomePageState extends State<HomePage> {
         scrollDirection: Axis.horizontal,
         pageSnapping: false,
         children: <Widget>[
-          LoginPage(pagina),
-          GruposPage(pagina),
-          GrupoPage(pagina),
-          ContatosPage(pagina),
-          PacientesPage(pagina),
-          PacientePage(pagina),
-          PacienteConfigPage(pagina)
+          /*  0  */ loginPage,
+          /*  1  */ gruposPage,
+          /*  2  */ grupoPage,
+          /*  3  */ contatosPage,
+          /*  4  */ pacientesPage,
+          /*  5  */ pacientePage,
+          /*  6  */ pacienteConfigPage,
+          /*  7  */ perfilPage,
+          /*  8  */ hpPage,
+          /*  9  */ hdPage,
+          /*  10 */ hdaPage,
+          /*  11 */ examesPage,
+          /*  12 */ medicamentosPage,
         ],
       ),
     );
@@ -169,6 +238,7 @@ class HomePageState extends State<HomePage> {
           else
             alterarPaciente(documento, paciente);
           paciente.manterMensagens();
+          paciente.manterMedicamentos();
         });
         atualizaTela();
       });
@@ -205,7 +275,7 @@ class HomePageState extends State<HomePage> {
       nome: documento.data['nome'],
       grupo: Grupo.buscaPorId(documento.data['grupo']),
       telefone: documento.data['telefone'],
-      entrada: DateTime.fromMillisecondsSinceEpoch(documento.data['entrada']),
+      entrada: Ferramentas.millisecondsParaData(documento.data['entrada']),
       hp: documento.data['hp'],
       hda: documento.data['hda'],
       hd: documento.data['hd'],
@@ -262,17 +332,6 @@ class HomePageState extends State<HomePage> {
     usuario.urlFoto = documento.data['urlFoto'];
     usuario.contatos = documento.data['contatos'];
   }
-}
-
-class Paginas {
-  static const int LOGIN = 0;
-  static const int GRUPOS = 1;
-  static const int GRUPO_CONFIG = 2;
-  static const int CONTATOS = 3;
-  static const int PACIENTES = 4;
-  static const int PACIENTE = 5;
-  static const int PACIENTE_CONFIG = 6;
-  static PageController paginador;
 }
 
 enum Estado { NORMAL, CARREGANDO }

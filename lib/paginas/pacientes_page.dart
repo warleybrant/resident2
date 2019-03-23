@@ -5,9 +5,7 @@ import 'package:resident/entidades/paciente.dart';
 import 'package:resident/paginas/home_page.dart';
 
 class PacientesPage extends StatefulWidget {
-  final PageController pagina;
-
-  PacientesPage(this.pagina);
+  PacientesPage();
 
   @override
   _PacientesPageState createState() => _PacientesPageState();
@@ -23,7 +21,7 @@ class _PacientesPageState extends State<PacientesPage> {
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               Grupo.mostrado = null;
-              widget.pagina.jumpToPage(Paginas.GRUPOS);
+              HomePage.mudarPagina(Paginas.GRUPOS);
             }),
       ),
       body: corpo(),
@@ -46,10 +44,15 @@ class _PacientesPageState extends State<PacientesPage> {
     );
   }
 
-  Widget cardPaciente(Paciente paciente) {
+  dynamic getFoto(Paciente paciente) {
     var foto = paciente.urlFoto != null
         ? CachedNetworkImageProvider(paciente.urlFoto, errorListener: () {})
         : null;
+    return foto;
+  }
+
+  Widget cardPaciente(Paciente paciente) {
+    var foto = getFoto(paciente);
 
     Widget fotoGrupo = foto != null
         ? Container(
@@ -73,7 +76,7 @@ class _PacientesPageState extends State<PacientesPage> {
           child: Text(paciente.nome),
           onPressed: () {
             Paciente.mostrado = paciente;
-            widget.pagina.jumpToPage(Paginas.PACIENTE);
+            HomePage.mudarPagina(Paginas.PACIENTE);
           }),
     );
     Widget configuracoesGrupo = RaisedButton(
@@ -82,7 +85,7 @@ class _PacientesPageState extends State<PacientesPage> {
       child: Icon(Icons.build),
       onPressed: () {
         Paciente.mostrado = paciente;
-        widget.pagina.jumpToPage(Paginas.PACIENTE);
+        HomePage.mudarPagina(Paginas.PACIENTE_CONFIG);
       },
     );
     List<Widget> lista = [fotoGrupo, textoGrupo, configuracoesGrupo];
@@ -113,6 +116,6 @@ class _PacientesPageState extends State<PacientesPage> {
   }
 
   void criarPaciente() {
-    widget.pagina.jumpToPage(Paginas.PACIENTE_CONFIG);
+    HomePage.mudarPagina(Paginas.PACIENTE_CONFIG);
   }
 }

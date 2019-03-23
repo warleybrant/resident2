@@ -6,11 +6,10 @@ import 'package:resident/entidades/usuario.dart';
 import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/tela.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class PacientePage extends StatefulWidget {
-  final PageController pagina;
-
-  PacientePage(this.pagina);
+  PacientePage();
 
   @override
   _PacientePageState createState() => _PacientePageState();
@@ -29,10 +28,10 @@ class _PacientePageState extends State<PacientePage> {
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               Paciente.mostrado = null;
-              widget.pagina.jumpToPage(Paginas.PACIENTES);
+              HomePage.mudarPagina(Paginas.PACIENTES);
             }),
       ),
-      endDrawer: Drawer(),
+      endDrawer: getDrawer(),
       body: corpo(),
     );
   }
@@ -74,6 +73,54 @@ class _PacientePageState extends State<PacientePage> {
       ));
     });
     return bubbles;
+  }
+
+  Widget getDrawer() {
+    return Drawer(
+      child: ListView(
+        children: listaDrawer(),
+      ),
+    );
+  }
+
+  List<Widget> listaDrawer() {
+    return [
+      getOpcaoDrawer(
+          texto: 'Hipótese Diagnóstica',
+          iconeInicio: FontAwesomeIcons.edit,
+          vaiPara: Paginas.HD),
+      getOpcaoDrawer(
+        texto: 'História de Doença Atual',
+        iconeInicio: FontAwesomeIcons.stethoscope,
+        vaiPara: Paginas.HDA,
+      ),
+      getOpcaoDrawer(
+          texto: 'Exames',
+          iconeInicio: Icons.assignment,
+          vaiPara: Paginas.EXAMES),
+      getOpcaoDrawer(
+          texto: 'Medicamentos',
+          iconeInicio: FontAwesomeIcons.pills,
+          vaiPara: Paginas.MEDICAMENTOS),
+      getOpcaoDrawer(
+          texto: 'História Pregressa',
+          iconeInicio: FontAwesomeIcons.scroll,
+          vaiPara: Paginas.HP),
+      // getOpcaoDrawer(texto: 'Alta do paciente', iconeInicio: Icons.accessibility),
+    ];
+  }
+
+  Widget getOpcaoDrawer(
+      {String texto, IconData iconeInicio, IconData iconeFim, int vaiPara}) {
+    return ListTile(
+      title: Text(texto),
+      leading: Icon(iconeInicio),
+      trailing: Icon(iconeFim),
+      onTap: () {
+        Navigator.of(context).pop();
+        HomePage.mudarPagina(vaiPara);
+      },
+    );
   }
 
   Widget barraEscrita() {

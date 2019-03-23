@@ -1,10 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:resident/entidades/anexo.dart';
 import 'package:resident/entidades/grupo.dart';
+import 'package:resident/entidades/medicamento.dart';
 import 'package:resident/entidades/mensagem.dart';
 import 'package:resident/entidades/usuario.dart';
+import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/ferramentas.dart';
-import 'package:resident/utils/nucleo.dart';
 
 class Paciente {
   static Paciente mostrado;
@@ -15,10 +16,11 @@ class Paciente {
   DateTime entrada;
   String telefone;
   String urlFoto;
-  List<String> hda = [];
-  List<String> hd = [];
-  List<String> hp = [];
+  List hda = [];
+  List hd = [];
+  List hp = [];
   List<Mensagem> mensagens = [];
+  List<Medicamento> medicamentos = [];
   bool alta = false;
 
   Paciente({
@@ -42,12 +44,12 @@ class Paciente {
     _alterar();
   }
 
-  Future<Null> _criar() {
+  void _criar() {
     var documento = Firestore.instance.collection('pacientes').document();
     setData(documento);
   }
 
-  Future<Null> _alterar() {
+  void _alterar() {
     var documento = Firestore.instance.collection('pacientes').document(id);
     setData(documento);
   }
@@ -66,8 +68,25 @@ class Paciente {
           alteraMensagem(documento, mensagem);
       });
       mensagens = Mensagem.porPaciente(this);
+      HomePage.atualizaTela();
+    });
+  }
 
-      Nucleo.atualizaTela();
+  void manterMedicamentos() {
+    Firestore.instance
+        .collection('medicamentos')
+        .where('paciente', isEqualTo: id)
+        .snapshots()
+        .listen((snap) {
+      snap.documents.forEach((documento) {
+        Medicamento medicamento = Medicamento.buscaPorId(documento.documentID);
+        if (medicamento == null)
+          criaMedicamento(documento);
+        else
+          alteraMedicamento(documento, medicamento);
+      });
+      medicamentos = Medicamento.porPaciente(this);
+      HomePage.atualizaTela();
     });
   }
 
@@ -92,7 +111,7 @@ class Paciente {
       'nome': nome,
       'grupo': grupo.id,
       'telefone': telefone,
-      'entrada': entrada,
+      'entrada': Ferramentas.dataParaMillisseconds(entrada),
       'hp': hp,
       'hda': hda,
       'hd': hd,
@@ -132,5 +151,48 @@ class Paciente {
     mensagem.paciente = Paciente.buscaPorId(documento.data['paciente']);
     mensagem.texto = documento.data['texto'];
     mensagem.tipo = documento.data['tipo'];
+  }
+
+  void criaMedicamento(DocumentSnapshot documento) {
+    Medicamento.lista.add(Medicamento(
+        id: documento.documentID,
+        descricao: documento.data['descricao'],
+        horaAdministrada: Ferramentas.millisecondsParaData(
+            documento.data['horaAdministrada']),
+        paciente: Paciente.buscaPorId(documento.data['paciente'])));
+  }
+
+  void alteraMedicamento(DocumentSnapshot documento, Medicamento medicamento) {
+    medicamento.descricao = documento.data['descricao'];
+    medicamento.horaAdministrada =
+        Ferramentas.millisecondsParaData(documento.data['horaAdministrada']);
+    medicamento.paciente = Paciente.buscaPorId(documento.data['paciente']);
+  }
+
+  String hpString() {
+    if (hp == null || hp.length == 0) return '';
+    String hpStr = '';
+    hp.forEach((str) {
+      hpStr += str + '\n';
+    });
+    return hpStr;
+  }
+
+  String hdaString() {
+    if (hda == null || hda.length == 0) return '';
+    String hdaStr = '';
+    hda.forEach((str) {
+      hdaStr += str + '\n';
+    });
+    return hdaStr;
+  }
+
+  String hdString() {
+    if (hd == null || hd.length == 0) return '';
+    String hdStr = '';
+    hd.forEach((str) {
+      hdStr += str + '\n';
+    });
+    return hdStr;
   }
 }

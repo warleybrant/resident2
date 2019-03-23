@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
+import 'package:resident/entidades/usuario.dart';
 import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/cores.dart';
+import 'package:resident/utils/tela.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GruposPage extends StatefulWidget {
-  final PageController pagina;
-
-  GruposPage(this.pagina);
+  GruposPage();
 
   @override
   _GruposPageState createState() => _GruposPageState();
@@ -38,7 +38,7 @@ class _GruposPageState extends State<GruposPage> {
           ),
           onPressed: () {
             Grupo.mostrado = null;
-            widget.pagina.jumpToPage(Paginas.GRUPO_CONFIG);
+            HomePage.mudarPagina(Paginas.GRUPO_CONFIG);
 //              deslogar();
           }),
     );
@@ -47,6 +47,7 @@ class _GruposPageState extends State<GruposPage> {
   List<Widget> drawerItens() {
     TextStyle estilo = TextStyle(fontSize: 15);
     return [
+      getDrawerHeader(),
       ListTile(
         title: Text(
           'Contatos',
@@ -55,7 +56,18 @@ class _GruposPageState extends State<GruposPage> {
         leading: Icon(Icons.group),
         onTap: () {
           Navigator.pop(context);
-          widget.pagina.jumpToPage(3);
+          HomePage.mudarPagina(Paginas.CONTATOS);
+        },
+      ),
+      Expanded(
+        child: Container(),
+      ),
+      ListTile(
+        title: Text('Sair'),
+        leading: Icon(Icons.clear),
+        onTap: (){
+          Usuario.deslogar();
+          HomePage.mudarPagina(Paginas.LOGIN);
         },
       )
     ];
@@ -87,7 +99,7 @@ class _GruposPageState extends State<GruposPage> {
           child: Text(grupo.nome),
           onPressed: () {
             Grupo.mostrado = grupo;
-            widget.pagina.jumpToPage(Paginas.PACIENTES);
+            HomePage.mudarPagina(Paginas.PACIENTES);
           }),
     );
     Widget configuracoesGrupo = RaisedButton(
@@ -96,7 +108,7 @@ class _GruposPageState extends State<GruposPage> {
       child: Icon(Icons.build),
       onPressed: () {
         Grupo.mostrado = grupo;
-        widget.pagina.jumpToPage(Paginas.GRUPO_CONFIG);
+        HomePage.mudarPagina(Paginas.GRUPO_CONFIG);
       },
     );
     List<Widget> lista = [fotoGrupo, textoGrupo, configuracoesGrupo];
@@ -114,6 +126,19 @@ class _GruposPageState extends State<GruposPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget getDrawerHeader() {
+    return UserAccountsDrawerHeader(
+      accountName: Text(Usuario.logado.getIdentificacao()),
+      currentAccountPicture: FotoCard(
+          Usuario.logado.urlFoto, Tela.x(context, 10), Tela.y(context, 10)),
+      accountEmail: Text('fulano@gmail.com'),
+      onDetailsPressed: (){
+        Navigator.of(context).pop();
+        HomePage.mudarPagina(Paginas.PERFIL);
+      },
     );
   }
 }

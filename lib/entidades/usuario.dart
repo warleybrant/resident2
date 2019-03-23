@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:resident/utils/ferramentas.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Usuario {
   static List<Usuario> lista = [];
@@ -102,5 +103,11 @@ class Usuario {
     novaLista.addAll(contatos);
     novaLista.remove(contato.id);
     contatos = novaLista;
+  }
+
+  static void deslogar() {
+    SharedPreferences.getInstance().then((prefs){
+      prefs.setString('usuarioLogado', null);
+    });
   }
 }

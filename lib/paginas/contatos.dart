@@ -8,9 +8,7 @@ import 'package:resident/utils/tela.dart';
 import 'package:universal_widget/universal_widget.dart';
 
 class ContatosPage extends StatefulWidget {
-  final PageController pagina;
-
-  ContatosPage(this.pagina);
+  ContatosPage();
 
   @override
   _ContatosPageState createState() => _ContatosPageState();
@@ -68,7 +66,7 @@ class _ContatosPageState extends State<ContatosPage> {
       leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            widget.pagina.jumpToPage(Paginas.GRUPOS);
+            HomePage.mudarPagina(Paginas.GRUPOS);
           }),
     );
   }

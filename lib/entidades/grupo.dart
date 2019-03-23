@@ -12,7 +12,7 @@ class Grupo {
   List<dynamic> contatos;
 
   Grupo({this.id, this.nome, this.descricao, this.contatos, this.urlFoto}) {
-    if (contatos == null) contatos = [];
+    if (contatos == null) contatos = [Usuario.logado.uid];
   }
 
   void salvar() {

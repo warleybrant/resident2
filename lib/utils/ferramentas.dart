@@ -6,9 +6,10 @@ class Ferramentas {
     return DateTime.fromMillisecondsSinceEpoch(dataInt);
   }
 
-  static formatarData(DateTime horaCriacao) {
+  static formatarData(DateTime horaCriacao, {String formato}) {
     if (horaCriacao == null) return '';
-    return DateFormat('HH:mm').format(horaCriacao);
+    if (formato == null) formato = 'HH:mm';
+    return DateFormat(formato).format(horaCriacao);
   }
 
   static int dataParaMillisseconds(DateTime data) {
@@ -18,5 +19,9 @@ class Ferramentas {
 
   static String soNumeros(String str) {
     return str.replaceAll(new RegExp(r'[^\d]'), '');
+  }
+
+  static DateTime stringParaData(String text) {
+    return DateFormat('dd/MM/yyyy').parse(text);
   }
 }

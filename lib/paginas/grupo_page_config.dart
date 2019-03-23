@@ -4,13 +4,10 @@ import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/cores.dart';
-import 'package:resident/utils/nucleo.dart';
 import 'package:resident/utils/tela.dart';
 
 class GrupoPage extends StatefulWidget {
-  final PageController pagina;
-
-  GrupoPage(this.pagina);
+  GrupoPage();
 
   @override
   _GrupoPageState createState() => _GrupoPageState();
@@ -31,8 +28,8 @@ class _GrupoPageState extends State<GrupoPage> {
   @override
   Widget build(BuildContext context) {
     if (contatosSelecionados == null) {
-      inicializarContatos();
       inicializarEstado();
+      inicializarContatos();
     }
     return Scaffold(
       appBar: appBar(),
@@ -164,7 +161,13 @@ class _GrupoPageState extends State<GrupoPage> {
             SizedBox(
               width: 20,
             ),
-            Text(contato.getIdentificacao())
+            SizedBox(
+              width: Tela.x(context, 40),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(contato.getIdentificacao()),
+              ),
+            )
           ],
         ),
         value: contatosSelecionados.contains(contato.id),
@@ -198,9 +201,7 @@ class _GrupoPageState extends State<GrupoPage> {
     Grupo.mostrado = null;
     nomeGrupo.clear();
     contatosSelecionados.clear();
-    widget.pagina.jumpToPage(Paginas.GRUPOS);
-    widget.pagina.jumpToPage(Paginas.GRUPOS);
-    Nucleo.atualizaTela();
+    HomePage.mudarPagina(Paginas.GRUPOS);
   }
 }
 
