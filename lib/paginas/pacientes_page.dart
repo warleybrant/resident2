@@ -116,6 +116,7 @@ class _PacientesPageState extends State<PacientesPage> {
   }
 
   void criarPaciente() {
+    Paciente.mostrado = Paciente();
     HomePage.mudarPagina(Paginas.PACIENTE_CONFIG);
   }
 }

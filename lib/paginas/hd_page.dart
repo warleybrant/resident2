@@ -54,6 +54,7 @@ class _HDPageState extends State<HDPage> {
 
   Widget getBotaoSalvar() {
     return FloatingActionButton(
+      child: Icon(Icons.done),
       onPressed: () {
         salvar();
         voltar();

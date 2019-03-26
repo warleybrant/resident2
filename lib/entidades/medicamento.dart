@@ -22,6 +22,8 @@ class Medicamento {
 
   void _criar() {
     var documento = Firestore.instance.collection('medicamentos').document();
+    this.id = documento.documentID;
+    lista.add(this);
     setData(documento);
   }
 
@@ -51,5 +53,10 @@ class Medicamento {
       if (medicamento.paciente.id == paciente.id) meds.add(medicamento);
     });
     return meds;
+  }
+
+  void deletar() {
+    Firestore.instance.collection('medicamentos').document(id).delete();
+    lista.remove(this);
   }
 }

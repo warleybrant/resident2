@@ -54,6 +54,7 @@ class _HPPageState extends State<HPPage> {
 
   Widget getBotaoSalvar() {
     return FloatingActionButton(
+      child: Icon(Icons.done),
       onPressed: () {
         salvar();
         voltar();
@@ -68,6 +69,8 @@ class _HPPageState extends State<HPPage> {
   Widget getHistoriaPregressa() {
     return TextFormField(
       controller: hpController,
+      maxLines: 5,
+      maxLengthEnforced: true,
       style: getEstiloCampo(),
       decoration: getDecoracaoCampo(label: ''),
     );

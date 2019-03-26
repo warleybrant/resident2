@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
 
 class Grupo {
@@ -23,12 +24,14 @@ class Grupo {
     _alterar();
   }
 
-  Future<Null> _criar() {
+  void _criar() {
     var documento = Firestore.instance.collection('grupos').document();
+    this.id = documento.documentID;
+    lista.add(this);
     setData(documento);
   }
 
-  Future<Null> _alterar() {
+  void _alterar() {
     var documento = Firestore.instance.collection('grupos').document(id);
     setData(documento);
   }
@@ -70,5 +73,14 @@ class Grupo {
   void setContatosPelosIds(List contatosSelecionados) {
     contatos = contatosSelecionados;
 //    contatos.addAll(contatosSelecionados);
+  }
+
+  void deletar() {
+    var pacientes = Paciente.porGrupo(id);
+    pacientes.forEach((paciente) {
+      paciente.deletar();
+    });
+    Firestore.instance.collection('grupos').document(id).delete();
+    lista.remove(this);
   }
 }

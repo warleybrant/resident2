@@ -48,13 +48,14 @@ class Mensagem {
     _alterar();
   }
 
-  Future<Null> _criar() {
+  void _criar() {
     var documento = Firestore.instance.collection('mensagens').document();
     id = documento.documentID;
+    lista.add(this);
     setData(documento);
   }
 
-  Future<Null> _alterar() {
+  void _alterar() {
     var documento = Firestore.instance.collection('mensagens').document(id);
     setData(documento);
   }
@@ -68,6 +69,11 @@ class Mensagem {
       'anexo': anexo != null ? anexo.id : null,
       'paciente': paciente.id
     });
+  }
+
+  void deletar() {
+    lista.remove(this);
+    Firestore.instance.collection('mensagens').document(id).delete();
   }
 }
 

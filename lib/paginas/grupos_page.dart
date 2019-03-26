@@ -37,11 +37,14 @@ class _GruposPageState extends State<GruposPage> {
             color: Colors.white,
           ),
           onPressed: () {
-            Grupo.mostrado = null;
-            HomePage.mudarPagina(Paginas.GRUPO_CONFIG);
-//              deslogar();
+            criarGrupo();
           }),
     );
+  }
+
+  void criarGrupo() {
+    Grupo.mostrado = Grupo();
+    HomePage.mudarPagina(Paginas.GRUPO_CONFIG);
   }
 
   List<Widget> drawerItens() {
@@ -65,7 +68,7 @@ class _GruposPageState extends State<GruposPage> {
       ListTile(
         title: Text('Sair'),
         leading: Icon(Icons.clear),
-        onTap: (){
+        onTap: () {
           Usuario.deslogar();
           HomePage.mudarPagina(Paginas.LOGIN);
         },
@@ -134,8 +137,8 @@ class _GruposPageState extends State<GruposPage> {
       accountName: Text(Usuario.logado.getIdentificacao()),
       currentAccountPicture: FotoCard(
           Usuario.logado.urlFoto, Tela.x(context, 10), Tela.y(context, 10)),
-      accountEmail: Text('fulano@gmail.com'),
-      onDetailsPressed: (){
+      accountEmail: Text(Usuario.logado.email),
+      onDetailsPressed: () {
         Navigator.of(context).pop();
         HomePage.mudarPagina(Paginas.PERFIL);
       },

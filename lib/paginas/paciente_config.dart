@@ -20,8 +20,15 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
       MaskedTextController(text: '', mask: '00/00/2000');
 
   @override
+  void initState() {
+    nomeController.text = Paciente.mostrado.nome;
+    entradaController.text = Ferramentas.formatarData(Paciente.mostrado.entrada,
+        formato: 'dd/MM/yyyy');
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (Paciente.mostrado == null) Paciente.mostrado = Paciente();
     return Scaffold(
       appBar: getAppBar(),
       body: getCorpo(),
@@ -38,17 +45,74 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
           voltar();
         },
       ),
+      actions: getAcoes(),
     );
   }
 
   Widget getTitulo() {
     String titulo = 'Novo Paciente';
-    if (Paciente.mostrado.id != null && Paciente.mostrado.id.isEmpty) {
-      titulo = Paciente.mostrado.nome;
-    }
+    if (Paciente.mostrado.nome.isNotEmpty) titulo = Paciente.mostrado.nome;
     return Text(
       titulo,
       style: getEstiloTitulo(),
+    );
+  }
+
+  List<Widget> getAcoes() {
+    if (Paciente.mostrado.id != null) {
+      return [getBotaoAcaoExcluirPaciente()];
+    }
+    return [];
+  }
+
+  Widget getBotaoAcaoExcluirPaciente() {
+    return FlatButton(
+      child: Icon(
+        Icons.delete,
+        color: Colors.white,
+      ),
+      onPressed: () async {
+        if ((await popupConfirmaExclusao())) {
+          Paciente.mostrado.deletar();
+          HomePage.mudarPagina(Paginas.PACIENTES);
+        }
+      },
+    );
+  }
+
+  Future<bool> popupConfirmaExclusao() async {
+    return await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text(
+                'Se você confirmar, irá apagar definitivamente todos as mensagens, audios, medicamentos, exames e todo o conteúdo. Confirma?'),
+            actions: <Widget>[
+              getBotaoConfirmaDeletePopup(),
+              getBotaoCancelaDeletePopup()
+            ],
+          );
+        });
+  }
+
+  Widget getBotaoConfirmaDeletePopup() {
+    return FlatButton(
+      child: Icon(
+        Icons.delete,
+        color: Colors.red,
+      ),
+      onPressed: () {
+        Navigator.of(context).pop(true);
+      },
+    );
+  }
+
+  Widget getBotaoCancelaDeletePopup() {
+    return FlatButton(
+      child: Icon(Icons.close),
+      onPressed: () {
+        Navigator.of(context).pop(false);
+      },
     );
   }
 
@@ -88,6 +152,7 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
   Widget getCampoEntrada() {
     return TextFormField(
       controller: entradaController,
+      keyboardType: TextInputType.number,
       decoration: getDecoracaoCampo(label: 'Dt. Entrada:'),
     );
   }
@@ -113,8 +178,8 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
         Paciente.mostrado.entrada =
             Ferramentas.stringParaData(entradaController.text);
         Paciente.mostrado.grupo = Grupo.mostrado;
-        Paciente.mostrado.mensagens = [];
         // Paciente.mostrado.urlFoto
+
         Paciente.mostrado.salvar();
         voltar();
       },

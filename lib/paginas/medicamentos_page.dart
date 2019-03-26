@@ -205,7 +205,7 @@ class _MedicamentosPageState extends State<MedicamentosPage> {
 
   List<Widget> listaMedicamentos() {
     List<Widget> linhasMedicamento = [];
-    Paciente.mostrado.medicamentos.forEach((Medicamento medicamento) {
+    Paciente.mostrado.getMedicamentos().forEach((Medicamento medicamento) {
       linhasMedicamento.add(getLinhaMedicamento(medicamento));
     });
     return linhasMedicamento;

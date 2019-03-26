@@ -54,6 +54,7 @@ class _HDAPageState extends State<HDAPage> {
 
   Widget getBotaoSalvar() {
     return FloatingActionButton(
+      child: Icon(Icons.done),
       onPressed: () {
         salvar();
         voltar();
@@ -68,6 +69,8 @@ class _HDAPageState extends State<HDAPage> {
   Widget getHistoricoDoencaAtual() {
     return TextFormField(
       controller: hdaController,
+      maxLines: 30,
+      maxLengthEnforced: true,
       style: getEstiloCampo(),
       decoration: getDecoracaoCampo(label: ''),
     );

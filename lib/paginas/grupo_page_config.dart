@@ -16,21 +16,18 @@ class GrupoPage extends StatefulWidget {
 class _GrupoPageState extends State<GrupoPage> {
   TextEditingController nomeGrupo = TextEditingController(text: '');
   Grupo grupo;
-  GrupoEstado estado = GrupoEstado.CRIACAO;
-  List contatosSelecionados = null;
+  List contatosSelecionados;
   final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
+    if (Grupo.mostrado.contatos == null) Grupo.mostrado.contatos = [];
+    contatosSelecionados = Grupo.mostrado.contatos;
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (contatosSelecionados == null) {
-      inicializarEstado();
-      inicializarContatos();
-    }
     return Scaffold(
       appBar: appBar(),
       body: corpo(),
@@ -44,29 +41,74 @@ class _GrupoPageState extends State<GrupoPage> {
     );
   }
 
-  void inicializarEstado() {
-    if (Grupo.mostrado == null) {
-      estado = GrupoEstado.CRIACAO;
-      Grupo.mostrado = Grupo();
-    } else
-      estado = GrupoEstado.ALTERACAO;
-  }
-
-  void inicializarContatos() {
-    contatosSelecionados = [];
-    contatosSelecionados.addAll(Grupo.mostrado.contatos);
-  }
-
   Widget appBar() {
-    if (Grupo.mostrado == null) return AppBar();
     return AppBar(
       title: Text(
-          '${estado == GrupoEstado.CRIACAO ? "Criação de Grupo" : Grupo.mostrado.nome}'),
+          '${Grupo.mostrado.id == null ? "Criação de Grupo" : Grupo.mostrado.nome}'),
       leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
             voltar();
           }),
+      actions: getListaAcoes(),
+    );
+  }
+
+  List<Widget> getListaAcoes() {
+    if (Grupo.mostrado.id == null) return [];
+    return [getBotaoAcaoExcluirGrupo()];
+  }
+
+  Widget getBotaoAcaoExcluirGrupo() {
+    return FlatButton(
+      child: Icon(
+        Icons.delete,
+        color: Colors.white,
+      ),
+      onPressed: () async {
+        if ((await popupConfirmaExclusao())) {
+          Grupo.mostrado.contatos = [];
+          Grupo.mostrado.salvar();
+          Grupo.mostrado.deletar();
+          HomePage.mudarPagina(Paginas.GRUPOS);
+        }
+      },
+    );
+  }
+
+  Future<bool> popupConfirmaExclusao() async {
+    return await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text(
+                'Se você confirmar, irá apagar definitivamente todos os pacientes e todo o conteúdo. Confirma?'),
+            actions: <Widget>[
+              getBotaoConfirmaDeletePopup(),
+              getBotaoCancelaDeletePopup()
+            ],
+          );
+        });
+  }
+
+  Widget getBotaoConfirmaDeletePopup() {
+    return FlatButton(
+      child: Icon(
+        Icons.delete,
+        color: Colors.red,
+      ),
+      onPressed: () {
+        Navigator.of(context).pop(true);
+      },
+    );
+  }
+
+  Widget getBotaoCancelaDeletePopup() {
+    return FlatButton(
+      child: Icon(Icons.close),
+      onPressed: () {
+        Navigator.of(context).pop(false);
+      },
     );
   }
 
@@ -105,7 +147,7 @@ class _GrupoPageState extends State<GrupoPage> {
               labelText: 'Digite o nome do grupo'),
           // The validator receives the text the user has typed in
           validator: (value) {
-            if (estado == GrupoEstado.CRIACAO) {
+            if (Grupo.mostrado.id == null) {
               if (value.isEmpty) return 'Nome do grupo está em branco';
             }
           },
@@ -199,10 +241,6 @@ class _GrupoPageState extends State<GrupoPage> {
 
   void voltar() {
     Grupo.mostrado = null;
-    nomeGrupo.clear();
-    contatosSelecionados.clear();
     HomePage.mudarPagina(Paginas.GRUPOS);
   }
 }
-
-enum GrupoEstado { CRIACAO, ALTERACAO }

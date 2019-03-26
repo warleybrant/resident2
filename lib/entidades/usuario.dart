@@ -8,6 +8,7 @@ class Usuario {
   String nome;
   String idResidente;
   String telefone;
+  String email;
   String uid;
   String urlFoto;
   List<dynamic> contatos;
@@ -16,9 +17,10 @@ class Usuario {
 
   Usuario({
     this.id,
-    this.nome,
-    this.idResidente,
-    this.telefone,
+    this.nome = '',
+    this.idResidente = '',
+    this.telefone = '',
+    this.email = '',
     this.uid,
     this.urlFoto,
     this.contatos,
@@ -39,12 +41,12 @@ class Usuario {
     _alterar();
   }
 
-  Future<Null> _criar() {
+  void _criar() {
     var documento = Firestore.instance.collection('usuarios').document();
     setData(documento);
   }
 
-  Future<Null> _alterar() {
+  void _alterar() {
     var documento = Firestore.instance.collection('usuarios').document(id);
     setData(documento);
   }
@@ -54,6 +56,7 @@ class Usuario {
       'nome': nome,
       'uid': uid,
       'telefone': telefone,
+      'email': email,
       'urlFoto': urlFoto,
       'idResidente': idResidente,
       'contatos': contatos,
@@ -106,8 +109,17 @@ class Usuario {
   }
 
   static void deslogar() {
-    SharedPreferences.getInstance().then((prefs){
+    SharedPreferences.getInstance().then((prefs) {
       prefs.setString('usuarioLogado', null);
     });
+  }
+
+  bool camposPreenchidos() {
+    return nome != null &&
+        nome.isNotEmpty &&
+        email != null &&
+        email.isNotEmpty &&
+        telefone != null &&
+        telefone.isNotEmpty;
   }
 }

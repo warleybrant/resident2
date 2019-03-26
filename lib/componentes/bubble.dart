@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 
 class Bubble extends StatelessWidget {
   Bubble({this.message, this.time, this.delivered, this.isMe});

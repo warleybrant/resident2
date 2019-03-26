@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:resident/entidades/anexo.dart';
+import 'package:resident/entidades/audio.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/medicamento.dart';
 import 'package:resident/entidades/mensagem.dart';
@@ -11,30 +12,46 @@ class Paciente {
   static Paciente mostrado;
   static List<Paciente> lista = [];
   String id;
-  String nome;
+  String nome = '';
   Grupo grupo;
   DateTime entrada;
-  String telefone;
-  String urlFoto;
+  String telefone = '';
+  String urlFoto = '';
   List hda = [];
   List hd = [];
   List hp = [];
-  List<Mensagem> mensagens = [];
-  List<Medicamento> medicamentos = [];
+  List<Mensagem> _mensagens = [];
+  List<Medicamento> _medicamentos = [];
+  List<Audio> _audios = [];
   bool alta = false;
 
   Paciente({
     this.id,
-    this.nome,
+    this.nome = '',
     this.grupo,
     this.entrada,
-    this.telefone,
-    this.alta,
+    this.telefone = '',
+    this.alta = false,
     this.hd,
     this.hda,
     this.hp,
     this.urlFoto,
   });
+
+  List<Mensagem> getMensagens() {
+    _mensagens = Mensagem.porPaciente(this);
+    return _mensagens;
+  }
+
+  List<Medicamento> getMedicamentos() {
+    _medicamentos = Medicamento.porPaciente(this);
+    return _medicamentos;
+  }
+
+  List<Audio> getAudios() {
+    _audios = Audio.porPaciente(this);
+    return _audios;
+  }
 
   void salvar() {
     if (id == null) {
@@ -46,6 +63,8 @@ class Paciente {
 
   void _criar() {
     var documento = Firestore.instance.collection('pacientes').document();
+    this.id = documento.documentID;
+    lista.add(this);
     setData(documento);
   }
 
@@ -66,8 +85,8 @@ class Paciente {
           criaMensagem(documento);
         else
           alteraMensagem(documento, mensagem);
+        manterAudios();
       });
-      mensagens = Mensagem.porPaciente(this);
       HomePage.atualizaTela();
     });
   }
@@ -85,7 +104,6 @@ class Paciente {
         else
           alteraMedicamento(documento, medicamento);
       });
-      medicamentos = Medicamento.porPaciente(this);
       HomePage.atualizaTela();
     });
   }
@@ -125,6 +143,38 @@ class Paciente {
     return lista.firstWhere((paciente) {
       return paciente.id == id;
     }, orElse: () => null);
+  }
+
+  void manterAudios() {
+    Firestore.instance
+        .collection('audios')
+        .where('paciente', isEqualTo: id)
+        .snapshots()
+        .listen((snap) {
+      snap.documents.forEach((documento) {
+        Audio audio = Audio.buscaPorId(documento.documentID);
+        if (audio == null)
+          criarAudio(documento);
+        else
+          alterarAudio(documento, audio);
+      });
+      HomePage.atualizaTela();
+    });
+  }
+
+  void criarAudio(DocumentSnapshot documento) {
+    Audio audio = Audio(
+        id: documento.documentID,
+        paciente: Paciente.buscaPorId(documento.data['descricao']),
+        url: documento.data['url']);
+    audio.carregar();
+    Audio.lista.add(audio);
+  }
+
+  void alterarAudio(DocumentSnapshot documento, Audio audio) {
+    audio.url = documento.data['url'];
+    audio.paciente = Paciente.buscaPorId(documento.data['paciente']);
+    audio.carregar();
   }
 
   void criaMensagem(DocumentSnapshot documento) {
@@ -194,5 +244,19 @@ class Paciente {
       hdStr += str + '\n';
     });
     return hdStr;
+  }
+
+  void deletar() {
+    getAudios().forEach((audio) {
+      audio.deletar();
+    });
+    getMensagens().forEach((mensagem) {
+      mensagem.deletar();
+    });
+    getMedicamentos().forEach((medicamento) {
+      medicamento.deletar();
+    });
+    Firestore.instance.collection('pacientes').document(id).delete();
+    lista.remove(this);
   }
 }

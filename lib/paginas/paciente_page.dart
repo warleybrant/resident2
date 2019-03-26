@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:resident/componentes/bubble.dart';
+import 'package:resident/entidades/audio.dart';
 import 'package:resident/entidades/mensagem.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/paginas/home_page.dart';
+import 'package:resident/utils/download_upload.dart';
 import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 
 class PacientePage extends StatefulWidget {
   PacientePage();
@@ -18,6 +24,8 @@ class PacientePage extends StatefulWidget {
 class _PacientePageState extends State<PacientePage> {
   PacientePageEstado estado = PacientePageEstado.PARADO;
   TextEditingController barraTexto = TextEditingController(text: '');
+  StreamSubscription streamGravacao;
+  FlutterSound flutterSound = new FlutterSound();
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +71,7 @@ class _PacientePageState extends State<PacientePage> {
 
   List<Widget> listaMensagensBubble() {
     List<Bubble> bubbles = [];
-    Paciente.mostrado.mensagens.forEach((mensagem) {
+    Paciente.mostrado.getMensagens().forEach((mensagem) {
       String hora = Ferramentas.formatarData(mensagem.horaCriacao);
       bubbles.add(Bubble(
         isMe: mensagem.autor.id == Usuario.logado.id,
@@ -95,17 +103,17 @@ class _PacientePageState extends State<PacientePage> {
         vaiPara: Paginas.HDA,
       ),
       getOpcaoDrawer(
-          texto: 'Exames',
-          iconeInicio: Icons.assignment,
-          vaiPara: Paginas.EXAMES),
+          texto: 'História Pregressa',
+          iconeInicio: FontAwesomeIcons.scroll,
+          vaiPara: Paginas.HP),
       getOpcaoDrawer(
           texto: 'Medicamentos',
           iconeInicio: FontAwesomeIcons.pills,
           vaiPara: Paginas.MEDICAMENTOS),
       getOpcaoDrawer(
-          texto: 'História Pregressa',
-          iconeInicio: FontAwesomeIcons.scroll,
-          vaiPara: Paginas.HP),
+          texto: 'Exames',
+          iconeInicio: Icons.assignment,
+          vaiPara: Paginas.EXAMES),
       // getOpcaoDrawer(texto: 'Alta do paciente', iconeInicio: Icons.accessibility),
     ];
   }
@@ -135,6 +143,8 @@ class _PacientePageState extends State<PacientePage> {
         width: Tela.x(context, 2),
       ));
       lista.add(botaoEnviarMensagem());
+    } else if (estado == PacientePageEstado.GRAVANDO_AUDIO) {
+      lista.add(botaoGravarAudio());
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -144,7 +154,7 @@ class _PacientePageState extends State<PacientePage> {
   }
 
   Widget corpoBarra() {
-    double largura = estado == PacientePageEstado.GRAVANDO_AUDIO ? 80 : 85;
+    double largura = estado == PacientePageEstado.GRAVANDO_AUDIO ? 75 : 85;
     return Material(
       color: Colors.white,
       shape: StadiumBorder(),
@@ -202,8 +212,9 @@ class _PacientePageState extends State<PacientePage> {
           texto: barraTexto.text,
           paciente: Paciente.mostrado,
         );
-        mensagem.salvar();
+
         setState(() {
+          mensagem.salvar();
           barraTexto.text = '';
           estado = PacientePageEstado.PARADO;
         });
@@ -228,25 +239,65 @@ class _PacientePageState extends State<PacientePage> {
   }
 
   Widget botaoGravarAudio() {
-    Widget icone = estado == PacientePageEstado.GRAVANDO_AUDIO
-        ? Icon(
-            Icons.mic,
-            size: 50,
+    Widget botao;
+    if (estado == PacientePageEstado.GRAVANDO_AUDIO) {
+      botao = Row(
+        children: <Widget>[
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () {
+              setState(() {
+                estado = PacientePageEstado.PARADO;
+                finalizarGravacao(true);
+              });
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.arrow_forward),
+            onPressed: () {
+              setState(() {
+                estado = PacientePageEstado.PARADO;
+                finalizarGravacao(false);
+              });
+            },
           )
-        : Icon(Icons.mic);
-    return GestureDetector(
-      onLongPress: () {
-        setState(() {
-          estado = PacientePageEstado.GRAVANDO_AUDIO;
-        });
-      },
-      onLongPressUp: () {
-        setState(() {
-          estado = PacientePageEstado.PARADO;
-        });
-      },
-      child: icone,
-    );
+        ],
+      );
+    } else {
+      botao = IconButton(
+        icon: Icon(Icons.mic),
+        onPressed: () {
+          setState(() {
+            estado = PacientePageEstado.GRAVANDO_AUDIO;
+            iniciarGravacao();
+          });
+        },
+      );
+    }
+
+    return botao;
+  }
+
+  void finalizarGravacao(bool cancelado) {
+    flutterSound.stopRecorder();
+    if (streamGravacao != null) {
+      streamGravacao.cancel();
+      streamGravacao = null;
+
+      if (!cancelado) {
+        Audio audio = Audio.criar(Paciente.mostrado);
+        DownloadUpload.upload(Paciente.mostrado.id, 'gravacao', 'mp4',
+            nomeNoBucket: audio.id);
+      }
+    }
+  }
+
+  Future iniciarGravacao() async {
+    var tempDir = await getTemporaryDirectory();
+    String p = '${tempDir.path}/gravacao.mp4';
+    String path = await flutterSound.startRecorder(p);
+    print('salvo em ' + path);
+    streamGravacao = flutterSound.onRecorderStateChanged.listen((_) {});
   }
 }
 

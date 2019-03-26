@@ -80,17 +80,23 @@ class HomePageState extends State<HomePage> {
     pagina.addListener(() {
       loginPage = LoginPage();
       gruposPage = GruposPage();
-      grupoPage = GrupoPage();
+      if (Grupo.mostrado != null) {
+        grupoPage = GrupoPage();
+        pacientesPage = PacientesPage();
+      }
+
       contatosPage = ContatosPage();
-      pacientesPage = PacientesPage();
-      pacientePage = PacientePage();
-      pacienteConfigPage = PacienteConfigPage();
+      if (Paciente.mostrado != null) {
+        pacientePage = PacientePage();
+        pacienteConfigPage = PacienteConfigPage();
+        hpPage = HPPage();
+        hdPage = HDPage();
+        hdaPage = HDAPage();
+        examesPage = ExamesPage();
+        medicamentosPage = MedicamentosPage();
+      }
+
       perfilPage = PerfilPage();
-      hpPage = HPPage();
-      hdPage = HDPage();
-      hdaPage = HDAPage();
-      examesPage = ExamesPage();
-      medicamentosPage = MedicamentosPage();
     });
     manterUsuarios();
     super.initState();
@@ -144,7 +150,10 @@ class HomePageState extends State<HomePage> {
           if (usuario != null) {
             Usuario.logado = usuario;
             manterGrupos();
-            pagina = PageController(initialPage: Paginas.GRUPOS);
+            if (Usuario.logado.camposPreenchidos())
+              pagina = PageController(initialPage: Paginas.GRUPOS);
+            else
+              pagina = PageController(initialPage: Paginas.PERFIL);
           } else
             pagina = PageController(initialPage: Paginas.LOGIN);
           return montaPagina();
@@ -317,6 +326,7 @@ class HomePageState extends State<HomePage> {
         nome: documento.data['nome'],
         idResidente: documento.data['idResidente'],
         telefone: documento.data['telefone'],
+        email: documento.data['email'],
         uid: documento.data['uid'],
         urlFoto: documento.data['urlFoto'],
         contatos: documento.data['contatos']));

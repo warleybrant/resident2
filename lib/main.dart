@@ -2,8 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/cores.dart';
+import 'package:resident/utils/download_upload.dart';
 
-void main() => runApp(MyApp());
+Future<void> main() async {
+  Firestore.instance.settings(persistenceEnabled: true);
+  DownloadUpload.carregarPaths().then((_) {
+    runApp(MyApp());
+  });
+}
 
 class MyApp extends StatelessWidget {
   @override
