@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
-import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/ferramentas.dart';
+import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 
@@ -18,12 +18,16 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
   TextEditingController nomeController = TextEditingController(text: '');
   MaskedTextController entradaController =
       MaskedTextController(text: '', mask: '00/00/2000');
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     nomeController.text = Paciente.mostrado.nome;
-    entradaController.text = Ferramentas.formatarData(Paciente.mostrado.entrada,
-        formato: 'dd/MM/yyyy');
+    var data = Paciente.mostrado.entrada;
+    if (data == null) data = DateTime.now();
+    entradaController.text =
+        Ferramentas.formatarData(data, formato: 'dd/MM/yyyy');
+
     super.initState();
   }
 
@@ -74,7 +78,7 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
       onPressed: () async {
         if ((await popupConfirmaExclusao())) {
           Paciente.mostrado.deletar();
-          HomePage.mudarPagina(Paginas.PACIENTES);
+          voltar();
         }
       },
     );
@@ -125,6 +129,7 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
       padding: EdgeInsets.symmetric(
           horizontal: Tela.x(context, 5), vertical: Tela.y(context, 5)),
       child: Form(
+        key: _formKey,
         child: ListView(
           children: getListaCampos(),
         ),
@@ -145,6 +150,10 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
   Widget getCampoNome() {
     return TextFormField(
       controller: nomeController,
+      validator: (_) {
+        if (_.isEmpty) return "Nome não pode ser vazio";
+        if (_.length < 3) return "Nome muito curto";
+      },
       decoration: getDecoracaoCampo(label: 'Nome:'),
     );
   }
@@ -153,6 +162,19 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
     return TextFormField(
       controller: entradaController,
       keyboardType: TextInputType.number,
+      validator: (_) {
+        if (_.isEmpty) return "Campo não pode ser vazio";
+        if (Ferramentas.stringParaData(_) == null) return "Data inválida";
+        int dia = int.parse(_.substring(0, 2));
+        int mes = int.parse(_.substring(3, 5));
+        int ano = int.parse(_.substring(6, 10));
+        if (dia < 1 ||
+            dia > 31 ||
+            mes < 1 ||
+            mes > 12 ||
+            ano < 2000 ||
+            ano > 3000) return "Data inválida";
+      },
       decoration: getDecoracaoCampo(label: 'Dt. Entrada:'),
     );
   }
@@ -174,21 +196,23 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
     return FloatingActionButton(
       child: Icon(Icons.done_outline),
       onPressed: () {
-        Paciente.mostrado.nome = nomeController.text;
-        Paciente.mostrado.entrada =
-            Ferramentas.stringParaData(entradaController.text);
-        Paciente.mostrado.grupo = Grupo.mostrado;
-        // Paciente.mostrado.urlFoto
+        if (_formKey.currentState.validate()) {
+          Paciente.mostrado.nome = nomeController.text;
+          Paciente.mostrado.entrada =
+              Ferramentas.stringParaData(entradaController.text);
+          Paciente.mostrado.grupo = Grupo.mostrado;
+          // Paciente.mostrado.urlFoto
 
-        Paciente.mostrado.salvar();
-        voltar();
+          Paciente.mostrado.salvar();
+          voltar();
+        }
       },
     );
   }
 
   void voltar() {
     Paciente.mostrado = null;
-    HomePage.mudarPagina(Paginas.PACIENTES);
+    Navigator.popUntil(context, (r) => r.settings.name == Paginas.PACIENTES);
   }
 }
 

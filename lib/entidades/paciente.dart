@@ -1,16 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:resident/entidades/anexo.dart';
 import 'package:resident/entidades/audio.dart';
+import 'package:resident/entidades/exame.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/medicamento.dart';
 import 'package:resident/entidades/mensagem.dart';
-import 'package:resident/entidades/usuario.dart';
-import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/ferramentas.dart';
 
 class Paciente {
   static Paciente mostrado;
-  static List<Paciente> lista = [];
+  static Map<String, List<Paciente>> listagem = Map();
   String id;
   String nome = '';
   Grupo grupo;
@@ -22,6 +20,7 @@ class Paciente {
   List hp = [];
   List<Mensagem> _mensagens = [];
   List<Medicamento> _medicamentos = [];
+  List<Exame> _exames = [];
   List<Audio> _audios = [];
   bool alta = false;
 
@@ -38,6 +37,14 @@ class Paciente {
     this.urlFoto,
   });
 
+  static List<Paciente> getTodosOsPacientes() {
+    var lista = <Paciente>[];
+    listagem.forEach((chave, valor) {
+      lista.addAll(valor);
+    });
+    return lista;
+  }
+
   List<Mensagem> getMensagens() {
     _mensagens = Mensagem.porPaciente(this);
     return _mensagens;
@@ -53,6 +60,11 @@ class Paciente {
     return _audios;
   }
 
+  getExames() {
+    _exames = Exame.porPaciente(this);
+    return _exames;
+  }
+
   void salvar() {
     if (id == null) {
       _criar();
@@ -64,7 +76,7 @@ class Paciente {
   void _criar() {
     var documento = Firestore.instance.collection('pacientes').document();
     this.id = documento.documentID;
-    lista.add(this);
+    listagem[grupo.id].add(this);
     setData(documento);
   }
 
@@ -73,44 +85,9 @@ class Paciente {
     setData(documento);
   }
 
-  void manterMensagens() {
-    Firestore.instance
-        .collection('mensagens')
-        .where('paciente', isEqualTo: id)
-        .snapshots()
-        .listen((snap) {
-      snap.documents.forEach((documento) {
-        Mensagem mensagem = Mensagem.buscaPorId(documento.documentID);
-        if (mensagem == null)
-          criaMensagem(documento);
-        else
-          alteraMensagem(documento, mensagem);
-        manterAudios();
-      });
-      HomePage.atualizaTela();
-    });
-  }
-
-  void manterMedicamentos() {
-    Firestore.instance
-        .collection('medicamentos')
-        .where('paciente', isEqualTo: id)
-        .snapshots()
-        .listen((snap) {
-      snap.documents.forEach((documento) {
-        Medicamento medicamento = Medicamento.buscaPorId(documento.documentID);
-        if (medicamento == null)
-          criaMedicamento(documento);
-        else
-          alteraMedicamento(documento, medicamento);
-      });
-      HomePage.atualizaTela();
-    });
-  }
-
   static List<Paciente> porGrupo(String grupoId) {
     List<Paciente> selecionados = [];
-    lista.forEach((paciente) {
+    listagem[grupoId].forEach((paciente) {
       if (paciente.grupo.id == grupoId) selecionados.add(paciente);
     });
     return selecionados;
@@ -118,7 +95,7 @@ class Paciente {
 
   static List<dynamic> todosIds() {
     List<dynamic> ids = [];
-    lista.forEach((paciente) {
+    getTodosOsPacientes().forEach((paciente) {
       ids.add(paciente.id);
     });
     return ids;
@@ -139,84 +116,11 @@ class Paciente {
   }
 
   static Paciente buscaPorId(String id) {
-    if (lista == null || lista.length == 0) return null;
-    return lista.firstWhere((paciente) {
+    if (getTodosOsPacientes() == null || getTodosOsPacientes().length == 0)
+      return null;
+    return getTodosOsPacientes().firstWhere((paciente) {
       return paciente.id == id;
     }, orElse: () => null);
-  }
-
-  void manterAudios() {
-    Firestore.instance
-        .collection('audios')
-        .where('paciente', isEqualTo: id)
-        .snapshots()
-        .listen((snap) {
-      snap.documents.forEach((documento) {
-        Audio audio = Audio.buscaPorId(documento.documentID);
-        if (audio == null)
-          criarAudio(documento);
-        else
-          alterarAudio(documento, audio);
-      });
-      HomePage.atualizaTela();
-    });
-  }
-
-  void criarAudio(DocumentSnapshot documento) {
-    Audio audio = Audio(
-        id: documento.documentID,
-        paciente: Paciente.buscaPorId(documento.data['descricao']),
-        url: documento.data['url']);
-    audio.carregar();
-    Audio.lista.add(audio);
-  }
-
-  void alterarAudio(DocumentSnapshot documento, Audio audio) {
-    audio.url = documento.data['url'];
-    audio.paciente = Paciente.buscaPorId(documento.data['paciente']);
-    audio.carregar();
-  }
-
-  void criaMensagem(DocumentSnapshot documento) {
-    Mensagem.lista.add(Mensagem(
-        id: documento.documentID,
-        autor: Usuario.buscaPorId(documento.data['autor']),
-        anexo: Anexo.buscaPorId(
-          documento.data['anexo'],
-        ),
-        horaCriacao:
-            Ferramentas.millisecondsParaData(documento.data['horaCriacao']),
-        paciente: Paciente.buscaPorId(documento.data['paciente']),
-        texto: documento.data['texto'],
-        tipo: documento.data['tipo']));
-  }
-
-  void alteraMensagem(DocumentSnapshot documento, Mensagem mensagem) {
-    mensagem.autor = Usuario.buscaPorId(documento.data['autor']);
-    mensagem.anexo = Anexo.buscaPorId(
-      documento.data['anexo'],
-    );
-    mensagem.horaCriacao =
-        Ferramentas.millisecondsParaData(documento.data['horaCriacao']);
-    mensagem.paciente = Paciente.buscaPorId(documento.data['paciente']);
-    mensagem.texto = documento.data['texto'];
-    mensagem.tipo = documento.data['tipo'];
-  }
-
-  void criaMedicamento(DocumentSnapshot documento) {
-    Medicamento.lista.add(Medicamento(
-        id: documento.documentID,
-        descricao: documento.data['descricao'],
-        horaAdministrada: Ferramentas.millisecondsParaData(
-            documento.data['horaAdministrada']),
-        paciente: Paciente.buscaPorId(documento.data['paciente'])));
-  }
-
-  void alteraMedicamento(DocumentSnapshot documento, Medicamento medicamento) {
-    medicamento.descricao = documento.data['descricao'];
-    medicamento.horaAdministrada =
-        Ferramentas.millisecondsParaData(documento.data['horaAdministrada']);
-    medicamento.paciente = Paciente.buscaPorId(documento.data['paciente']);
   }
 
   String hpString() {
@@ -257,6 +161,19 @@ class Paciente {
       medicamento.deletar();
     });
     Firestore.instance.collection('pacientes').document(id).delete();
-    lista.remove(this);
+  }
+
+  static Paciente deSnap(DocumentSnapshot documento) {
+    return Paciente(
+      id: documento.documentID,
+      nome: documento.data['nome'],
+      grupo: Grupo.buscaPorId(documento.data['grupo']),
+      telefone: documento.data['telefone'],
+      entrada: Ferramentas.millisecondsParaData(documento.data['entrada']),
+      hp: documento.data['hp'],
+      hda: documento.data['hda'],
+      hd: documento.data['hd'],
+      alta: documento.data['alta'],
+    );
   }
 }

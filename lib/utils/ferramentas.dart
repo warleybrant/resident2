@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class Ferramentas {
@@ -22,6 +23,41 @@ class Ferramentas {
   }
 
   static DateTime stringParaData(String text) {
-    return DateFormat('dd/MM/yyyy').parse(text);
+    try {
+      return DateFormat('dd/MM/yyyy').parse(text);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Widget barreiraModal(Function aoTocar) {
+    return InkWell(
+      onTap: aoTocar,
+      child: Opacity(
+        opacity: 0.7,
+        child: Container(
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
+  static Widget loading({@required aoTocar}) {
+    return Opacity(
+      opacity: 0.7,
+      child: InkWell(
+        onTap: () {
+          aoTocar();
+        },
+        child: Container(
+          color: Colors.black,
+          child: Center(
+            child: Card(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

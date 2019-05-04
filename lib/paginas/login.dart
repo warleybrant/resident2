@@ -1,9 +1,13 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/paginas/home_page.dart';
+import 'package:resident/main.dart';
+import 'package:resident/utils/paginas.dart';
+import 'package:resident/utils/tela.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info/device_info.dart';
 
@@ -44,13 +48,32 @@ class _LoginPageState extends State<LoginPage> {
               color: Colors.black,
             ),
           ),
-          Center(
-            child: CircularProgressIndicator(),
-          )
+          getIndicadorProgresso()
         ],
       );
     }
     return getScaffold();
+  }
+
+  Widget getIndicadorProgresso() {
+    return Center(
+      child: Card(
+        child: Container(
+          width: Tela.x(context, 20),
+          height: Tela.y(context, 10),
+          child: InkWell(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+            onTap: () {
+              setState(() {
+                carregando = false;
+              });
+            },
+          ),
+        ),
+      ),
+    );
   }
 
   Widget getScaffold() {
@@ -125,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget textoLogin() {
     return Text(
       'Login',
-      style: TextStyle(color: Colors.white, fontSize: 30),
+      style: TextStyle(color: Color(0xff005000), fontSize: 30),
     );
   }
 
@@ -133,9 +156,13 @@ class _LoginPageState extends State<LoginPage> {
     return RaisedButton(
       child: textoLogin(),
 //      color: Colors.redAccent,
-      padding: EdgeInsets.symmetric(horizontal: 100, vertical: 10),
+      padding: EdgeInsets.symmetric(
+          horizontal: Tela.x(context, 10), vertical: Tela.y(context, 1)),
       onPressed: () {
-        if (_formKey.currentState.validate()) _testVerifyPhoneNumber();
+        if (_formKey.currentState.validate()) {
+          FocusScope.of(context).requestFocus(new FocusNode());
+          _testVerifyPhoneNumber();
+        }
       },
     );
   }
@@ -145,23 +172,22 @@ class _LoginPageState extends State<LoginPage> {
     final PhoneVerificationCompleted verificationCompleted =
         (FirebaseUser user) {
       if (carregando) {
-        setState(() {
-          Usuario usuario = Usuario.buscaPorId(user.uid);
-          if (usuario == null) {
-            usuario = new Usuario(
-                id: user.uid,
-                nome: '',
-                uid: user.uid,
-                telefone: telefoneFormatado(),
-                urlFoto: null,
-                idResidente: telefoneFormatado(),
-                contatos: []);
-            usuario.salvar();
-          }
-          prefs.setString('usuarioLogado', user.uid);
-          HomePage.usuarioLogado = usuario;
-          HomePage.mudarPagina(Paginas.GRUPOS);
-        });
+        Usuario usuario = Usuario.buscaPorId(user.uid);
+        if (usuario == null) {
+          usuario = new Usuario(
+              id: user.uid,
+              nome: '',
+              uid: user.uid,
+              telefone: telefoneFormatado(),
+              urlFoto: null,
+              idResidente: telefoneFormatado(),
+              contatos: []);
+          usuario.salvar();
+        }
+        Usuario.logado = usuario;
+        prefs.setString('usuarioLogado', user.uid);
+        Navigator.pushNamedAndRemoveUntil(
+            context, Paginas.INICIAL, (r) => false);
       }
     };
 
@@ -170,6 +196,20 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         carregando = false;
         excessaoAuth = authException;
+        if (authException.code == 'quotaExceeded') {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text(
+                'Todas as chamadas deste dispositivo foram bloqueadas por atividade não usual. Tente novamente mais tarde'),
+          ));
+        } else if (authException.code == 'invalidPhoneNumber') {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text('Número de telefone inválido'),
+          ));
+        } else {
+          Scaffold.of(context).showSnackBar(SnackBar(
+            content: Text(authException.message),
+          ));
+        }
         print(excessaoAuth.message);
       });
     };
@@ -181,7 +221,7 @@ class _LoginPageState extends State<LoginPage> {
       // });
       this.verificationId = verificationId;
       _smsCodeController.text = testSmsCode;
-      // detectaEmulador();
+      detectaEmulador();
     };
 
     final PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout =
@@ -191,7 +231,7 @@ class _LoginPageState extends State<LoginPage> {
       // });
       this.verificationId = verificationId;
       _smsCodeController.text = testSmsCode;
-      // detectaEmulador();
+      detectaEmulador();
     };
 
     setState(() {
@@ -206,19 +246,39 @@ class _LoginPageState extends State<LoginPage> {
         codeAutoRetrievalTimeout: codeAutoRetrievalTimeout);
   }
 
-  Future detectaEmulador() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+  void detectaEmulador() {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-    deviceInfo.iosInfo.then((info) {
-      if (!info.isPhysicalDevice) {
-        Usuario teste = Usuario.buscaPorId('fIGlXhgZytWT69oy2VRh54JVq743');
-        if (teste != null) {
-          prefs.setString('usuarioLogado', teste.uid);
-          HomePage.usuarioLogado = teste;
-          HomePage.mudarPagina(Paginas.GRUPOS);
+    if (Platform.isIOS) {
+      deviceInfo.iosInfo.then((info) {
+        if (!info.isPhysicalDevice) {
+          loginSimulado();
         }
-      }
-    });
+      });
+    } else if (Platform.isAndroid) {
+      deviceInfo.androidInfo.then((info) {
+        if (!info.isPhysicalDevice) {
+          loginSimulado();
+        }
+      });
+    }
+  }
+
+  void loginSimulado() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Usuario teste = Usuario.buscaPorTelefone('+5531000000000');
+    if (teste != null) {
+      prefs.setString('usuarioLogado', teste.id);
+      Usuario.logado = teste;
+      Navigator.pushNamedAndRemoveUntil(context, Paginas.INICIAL, (r) => false);
+    } else {
+      teste = Usuario(
+          telefone: '+5531000000000',
+          nome: 'Usuário teste emulador',
+          email: 'teste@aaa.bbb.cc',
+          contatos: [],
+          uid: '000000000000000');
+      teste.salvar();
+    }
   }
 
   String telefoneFormatado() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:resident/entidades/paciente.dart';
-import 'package:resident/paginas/home_page.dart';
+import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 
 class HDPage extends StatefulWidget {
@@ -32,7 +32,7 @@ class _HDPageState extends State<HDPage> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
-          HomePage.mudarPagina(Paginas.PACIENTE);
+          voltar();
         },
       ),
     );
@@ -70,6 +70,8 @@ class _HDPageState extends State<HDPage> {
     return TextFormField(
       controller: hdController,
       style: getEstiloCampo(),
+      maxLengthEnforced: true,
+      maxLines: 5,
       decoration: getDecoracaoCampo(label: ''),
     );
   }
@@ -93,7 +95,7 @@ class _HDPageState extends State<HDPage> {
     Paciente.mostrado.salvar();
   }
 
-  void voltar() {
-    HomePage.mudarPagina(Paginas.PACIENTE);
+  voltar() {
+    Navigator.popUntil(context, (r) => r.settings.name == Paginas.PACIENTE);
   }
 }

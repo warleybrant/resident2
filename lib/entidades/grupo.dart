@@ -83,4 +83,22 @@ class Grupo {
     Firestore.instance.collection('grupos').document(id).delete();
     lista.remove(this);
   }
+
+  void sair() {
+    var contatosMenosEste = List.from(this.contatos);
+    contatosMenosEste.remove(Usuario.logado.id);
+
+    Grupo.mostrado.contatos = contatosMenosEste;
+    Grupo.mostrado.salvar();
+    lista.remove(this);
+  }
+
+  static Grupo deSnap(DocumentSnapshot documento) {
+    return Grupo(
+        id: documento.documentID,
+        nome: documento.data['nome'],
+        descricao: documento.data['descricao'],
+        contatos: documento.data['contatos'],
+        urlFoto: documento.data['urlFoto']);
+  }
 }

@@ -59,4 +59,13 @@ class Medicamento {
     Firestore.instance.collection('medicamentos').document(id).delete();
     lista.remove(this);
   }
+
+  static Medicamento deSnap(DocumentSnapshot documento) {
+    return Medicamento(
+        id: documento.documentID,
+        descricao: documento.data['descricao'],
+        horaAdministrada: Ferramentas.millisecondsParaData(
+            documento.data['horaAdministrada']),
+        paciente: Paciente.buscaPorId(documento.data['paciente']));
+  }
 }

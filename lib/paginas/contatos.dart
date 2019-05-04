@@ -2,8 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/cores.dart';
+import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:universal_widget/universal_widget.dart';
 
@@ -42,7 +42,6 @@ class _ContatosPageState extends State<ContatosPage> {
     if (popup != null) {
       lista.add(modalPopup());
       lista.add(popup);
-      animarEntradaPopup();
     } else if (deleteContato != null) {
       lista.add(modalPopup());
       lista.add(deleteContato);
@@ -66,9 +65,13 @@ class _ContatosPageState extends State<ContatosPage> {
       leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            HomePage.mudarPagina(Paginas.GRUPOS);
+            voltar();
           }),
     );
+  }
+
+  voltar() {
+    Navigator.popUntil(context, (r) => r.settings.name == Paginas.GRUPOS);
   }
 
   Widget corpo() {
@@ -85,7 +88,7 @@ class _ContatosPageState extends State<ContatosPage> {
   Widget btnBuscaContato() {
     return FloatingActionButton(
       child: Icon(Icons.add),
-      backgroundColor: Color(0xFF123456),
+      // backgroundColor: Color(0xFF123456),
       onPressed: () {
         setState(() {
           estado = ContatosEstado.FILTRO;
@@ -107,11 +110,11 @@ class _ContatosPageState extends State<ContatosPage> {
 
   Widget basePopupBuscaContato() {
     return UniversalWidget(
-      width: Tela.x(context, 15),
-      height: Tela.y(context, 30),
-      top: Tela.y(context, 100),
-      left: Tela.x(context, 45),
-      animateWhenUpdate: true,
+      width: Tela.x(context, 85),
+      height: Tela.y(context, 40),
+      left: Tela.x(context, 7.5),
+      top: Tela.y(context, 5),
+      animateWhenUpdate: false,
     );
   }
 
@@ -275,6 +278,7 @@ class _ContatosPageState extends State<ContatosPage> {
                 ),
               ),
               FloatingActionButton(
+                heroTag: contato.id,
                 child: Icon(Icons.clear),
                 backgroundColor: Colors.red,
                 onPressed: () {
@@ -296,7 +300,7 @@ class _ContatosPageState extends State<ContatosPage> {
       y: Tela.y(context, 10),
       width: Tela.x(context, 80),
       height: Tela.y(context, 20),
-      animateWhenUpdate: true,
+      animateWhenUpdate: false,
       padding: EdgeInsets.all(5),
       child: Stack(
         children: <Widget>[
@@ -376,7 +380,7 @@ class _ContatosPageState extends State<ContatosPage> {
       decoration: BoxDecoration(
           shape: BoxShape.circle,
           image: DecorationImage(
-            fit: BoxFit.contain,
+            fit: BoxFit.cover,
             image: CachedNetworkImageProvider(contato.urlFoto),
           )),
     );

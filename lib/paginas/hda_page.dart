@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:resident/entidades/paciente.dart';
-import 'package:resident/paginas/home_page.dart';
+import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 
 class HDAPage extends StatefulWidget {
@@ -32,7 +32,7 @@ class _HDAPageState extends State<HDAPage> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
-          HomePage.mudarPagina(Paginas.PACIENTE);
+          voltar();
         },
       ),
     );
@@ -69,7 +69,7 @@ class _HDAPageState extends State<HDAPage> {
   Widget getHistoricoDoencaAtual() {
     return TextFormField(
       controller: hdaController,
-      maxLines: 30,
+      maxLines: 20,
       maxLengthEnforced: true,
       style: getEstiloCampo(),
       decoration: getDecoracaoCampo(label: ''),
@@ -95,7 +95,7 @@ class _HDAPageState extends State<HDAPage> {
     Paciente.mostrado.salvar();
   }
 
-  void voltar() {
-    HomePage.mudarPagina(Paginas.PACIENTE);
+  voltar() {
+    Navigator.popUntil(context, (r) => r.settings.name == Paginas.PACIENTE);
   }
 }

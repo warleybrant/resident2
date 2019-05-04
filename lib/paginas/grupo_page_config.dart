@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/paginas/home_page.dart';
+import 'package:resident/main.dart';
 import 'package:resident/utils/cores.dart';
+import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 
 class GrupoPage extends StatefulWidget {
@@ -21,8 +22,10 @@ class _GrupoPageState extends State<GrupoPage> {
 
   @override
   void initState() {
+    if (Grupo.mostrado == null) Grupo.mostrado = Grupo();
     if (Grupo.mostrado.contatos == null) Grupo.mostrado.contatos = [];
-    contatosSelecionados = Grupo.mostrado.contatos;
+    contatosSelecionados = List.from(Grupo.mostrado.contatos);
+    nomeGrupo.text = Grupo.mostrado.nome;
     super.initState();
   }
 
@@ -44,7 +47,7 @@ class _GrupoPageState extends State<GrupoPage> {
   Widget appBar() {
     return AppBar(
       title: Text(
-          '${Grupo.mostrado.id == null ? "Criação de Grupo" : Grupo.mostrado.nome}'),
+          '${Grupo.mostrado != null && Grupo.mostrado.id == null ? "Criação de Grupo" : Grupo.mostrado.nome}'),
       leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -56,7 +59,29 @@ class _GrupoPageState extends State<GrupoPage> {
 
   List<Widget> getListaAcoes() {
     if (Grupo.mostrado.id == null) return [];
-    return [getBotaoAcaoExcluirGrupo()];
+    return [
+      getBotaoAcaoExcluirGrupo(),
+      getBotaoSairDoGrupo(),
+    ];
+  }
+
+  getBotaoSairDoGrupo() {
+    return RotatedBox(
+      quarterTurns: 2,
+      child: IconButton(
+        icon: Icon(Icons.backspace),
+        onPressed: () async {
+          if ((await popupConfirmaSaida())) {
+            Grupo.mostrado.sair();
+            voltarParaGruposPage();
+          }
+        },
+      ),
+    );
+  }
+
+  voltarParaGruposPage() {
+    Navigator.popUntil(context, (r) => r.settings.name == Paginas.GRUPOS);
   }
 
   Widget getBotaoAcaoExcluirGrupo() {
@@ -70,10 +95,24 @@ class _GrupoPageState extends State<GrupoPage> {
           Grupo.mostrado.contatos = [];
           Grupo.mostrado.salvar();
           Grupo.mostrado.deletar();
-          HomePage.mudarPagina(Paginas.GRUPOS);
+          voltarParaGruposPage();
         }
       },
     );
+  }
+
+  Future<bool> popupConfirmaSaida() async {
+    return await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text('Se você confirmar, irá sair do grupo. Confirma?'),
+            actions: <Widget>[
+              getBotaoConfirmaSaidaPopup(),
+              getBotaoCancelaDeletePopup()
+            ],
+          );
+        });
   }
 
   Future<bool> popupConfirmaExclusao() async {
@@ -89,6 +128,21 @@ class _GrupoPageState extends State<GrupoPage> {
             ],
           );
         });
+  }
+
+  Widget getBotaoConfirmaSaidaPopup() {
+    return RotatedBox(
+      quarterTurns: 2,
+      child: FlatButton(
+        child: Icon(
+          Icons.backspace,
+          color: Colors.red,
+        ),
+        onPressed: () {
+          Navigator.of(context).pop(true);
+        },
+      ),
+    );
   }
 
   Widget getBotaoConfirmaDeletePopup() {
@@ -140,10 +194,11 @@ class _GrupoPageState extends State<GrupoPage> {
         padding: EdgeInsets.symmetric(
             horizontal: Tela.x(context, 6), vertical: Tela.y(context, 1)),
         child: TextFormField(
-          style: TextStyle(color: Colors.white, fontSize: 20),
+          style: TextStyle(fontSize: 20),
           decoration: InputDecoration(
-              labelStyle: TextStyle(color: Colors.black),
-              border: InputBorder.none,
+              fillColor: Colors.white,
+              filled: true,
+              border: OutlineInputBorder(),
               labelText: 'Digite o nome do grupo'),
           // The validator receives the text the user has typed in
           validator: (value) {
@@ -199,9 +254,9 @@ class _GrupoPageState extends State<GrupoPage> {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            FotoCard(contato.urlFoto, 80, 80),
+            FotoCard(contato.urlFoto, Tela.x(context, 10), Tela.y(context, 10)),
             SizedBox(
-              width: 20,
+              width: Tela.x(context, 1),
             ),
             SizedBox(
               width: Tela.x(context, 40),
@@ -235,12 +290,13 @@ class _GrupoPageState extends State<GrupoPage> {
         contatosSelecionados.add(Usuario.logado.id);
       Grupo.mostrado.setContatosPelosIds(contatosSelecionados);
       Grupo.mostrado.salvar();
+      FocusScope.of(context).requestFocus(new FocusNode());
       voltar();
     }
   }
 
   void voltar() {
     Grupo.mostrado = null;
-    HomePage.mudarPagina(Paginas.GRUPOS);
+    voltarParaGruposPage();
   }
 }

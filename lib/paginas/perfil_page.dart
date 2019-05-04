@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/paginas/home_page.dart';
+import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 
@@ -26,21 +26,32 @@ class _PerfilPageState extends State<PerfilPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: getTitulo(),
-      body: getCorpo(),
-      floatingActionButton: getBotaoSalvar(),
+    return WillPopScope(
+      onWillPop: () {
+        _formKey.currentState.validate();
+        return Future.value(podeVoltar());
+      },
+      child: Scaffold(
+        appBar: getTitulo(),
+        body: getCorpo(),
+        floatingActionButton: getBotaoSalvar(),
+      ),
     );
   }
 
+  bool podeVoltar() {
+    return Usuario.logado != null && Usuario.logado.camposPreenchidos();
+  }
+
   Widget getTitulo() {
-    return AppBar(
-        title: Text('Perfil'),
-        leading: IconButton(
+    var btnVoltar = podeVoltar()
+        ? IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               voltar();
-            }));
+            })
+        : null;
+    return AppBar(title: Text('Perfil'), leading: btnVoltar);
   }
 
   Widget getCorpo() {
@@ -123,7 +134,8 @@ class _PerfilPageState extends State<PerfilPage> {
 
   Widget getCampoTelefone() {
     return TextFormField(
-      enabled: false,
+      enabled:
+          Usuario.logado.telefone == null || Usuario.logado.telefone.isEmpty,
       controller: telefoneController,
       decoration: getCampoDecoration(label: 'Telefone', icone: Icons.phone),
       style: getCampoStyle(),
@@ -152,8 +164,9 @@ class _PerfilPageState extends State<PerfilPage> {
   }
 
   void voltar() {
-    if (_formKey.currentState.validate()) {
-      HomePage.mudarPagina(Paginas.GRUPOS);
+    // if (_formKey.currentState.validate()) {
+    if (podeVoltar()) {
+      Navigator.pushNamed(context, Paginas.GRUPOS);
     }
   }
 }

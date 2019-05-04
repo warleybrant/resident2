@@ -1,18 +1,28 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:resident/componentes/balao_data.dart';
+import 'package:resident/componentes/balao_mensagem.dart';
 import 'package:resident/componentes/bubble.dart';
+import 'package:resident/componentes/gravador_som.dart';
 import 'package:resident/entidades/audio.dart';
+import 'package:resident/entidades/exame.dart';
+import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/mensagem.dart';
 import 'package:resident/entidades/paciente.dart';
+import 'package:resident/entidades/recurso_midia.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/download_upload.dart';
 import 'package:resident/utils/ferramentas.dart';
+import 'package:resident/utils/paginas.dart';
+import 'package:resident/utils/proxy_firestore.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:image_picker/image_picker.dart';
 
 class PacientePage extends StatefulWidget {
   PacientePage();
@@ -22,10 +32,49 @@ class PacientePage extends StatefulWidget {
 }
 
 class _PacientePageState extends State<PacientePage> {
-  PacientePageEstado estado = PacientePageEstado.PARADO;
-  TextEditingController barraTexto = TextEditingController(text: '');
+  int atualizacoes = 0;
+  bool carregando = false;
+
   StreamSubscription streamGravacao;
   FlutterSound flutterSound = new FlutterSound();
+
+  PacientePageEstado estado = PacientePageEstado.PARADO;
+  TextEditingController barraTexto = TextEditingController(text: '');
+  ScrollController listaMensagensController = ScrollController();
+
+  int numMensagens = 0;
+  List<Mensagem> mensagens = [];
+
+  @override
+  void initState() {
+    listaMensagensController = ScrollController();
+    listaMensagensController.addListener(eventoScrollMensagens);
+    mensagens = Mensagem.porPaciente(Paciente.mostrado);
+    ProxyFirestore.observar(Paginas.PACIENTE, () {
+      if (mounted) {
+        var _lista = <Mensagem>[];
+        _lista.addAll(Mensagem.porPaciente(Paciente.mostrado));
+        setState(() {
+          mensagens = _lista;
+          print('mensagens atualizadas');
+          if (listaMensagensController.hasClients) {
+            print('descendo scroll');
+            listaMensagensController.animateTo(
+                listaMensagensController.position.maxScrollExtent,
+                duration: Duration(milliseconds: 400),
+                curve: Curves.easeOut);
+          }
+        });
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    ProxyFirestore.pararDeObservar(Paginas.PACIENTES);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +85,7 @@ class _PacientePageState extends State<PacientePage> {
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               Paciente.mostrado = null;
-              HomePage.mudarPagina(Paginas.PACIENTES);
+              voltar();
             }),
       ),
       endDrawer: getDrawer(),
@@ -45,28 +94,97 @@ class _PacientePageState extends State<PacientePage> {
   }
 
   Widget corpo() {
+    var _lista = <Widget>[];
+    _lista.add(corpoStackPrincipal());
+
+    if (carregando) {
+      _lista.add(Ferramentas.loading(aoTocar: () {
+        setState(() {
+          carregando = false;
+        });
+      }));
+    }
+    return Stack(
+      children: _lista,
+    );
+  }
+
+  corpoStackPrincipal() {
     return Stack(
       fit: StackFit.passthrough,
+      overflow: Overflow.visible,
       children: <Widget>[
-        Container(
-          height: Tela.y(context, 90),
-          color: Colors.teal,
-          child: mensagensWidget(),
+        ListView(
+          children: <Widget>[
+            Container(
+              height: Tela.y(context, 80),
+              color: Colors.teal,
+              child: mensagensWidget(),
+            ),
+            barraEscrita()
+          ],
         ),
-        Positioned(
-          bottom: Tela.y(context, 1),
-          left: Tela.x(context, 2.5),
-          child: barraEscrita(),
-        )
       ],
     );
   }
 
+  eventoScrollMensagens() {
+    if (listaMensagensController.offset >=
+            listaMensagensController.position.maxScrollExtent &&
+        !listaMensagensController.position.outOfRange) {
+      setState(() {
+        print("reach the bottom");
+      });
+    }
+    if (listaMensagensController.offset <=
+            listaMensagensController.position.minScrollExtent &&
+        !listaMensagensController.position.outOfRange) {
+      setState(() {
+        print("reach the top");
+      });
+    }
+  }
+
   Widget mensagensWidget() {
-    return ListView(
-      shrinkWrap: true,
-      children: listaMensagensBubble(),
+    var lista = listBaloesMensagem();
+    var widget = ListView(
+      controller: listaMensagensController,
+      children: lista,
     );
+    return widget;
+  }
+
+  List<Widget> listBaloesMensagem() {
+    List<BalaoData> baloesData = [];
+    List<Widget> widgets = [];
+    mensagens.forEach((mensagem) {
+      String dataFormatada =
+          DateFormat('dd/MM/yyyy').format(mensagem.horaCriacao);
+      var balaoData = BalaoData(mensagem.horaCriacao);
+      var balao = BalaoMensagem(
+        UniqueKey(),
+        mensagem,
+        aoTocar: () {
+          setState(() {
+            carregando = true;
+          });
+        },
+        feedback: () {
+          setState(() {
+            carregando = false;
+          });
+        },
+      );
+      if (!baloesData.any((BalaoData bal) {
+        return bal.getDataFormatada() == dataFormatada;
+      })) {
+        baloesData.add(balaoData);
+        widgets.add(balaoData);
+      }
+      widgets.add(balao);
+    });
+
+    return widgets;
   }
 
   List<Widget> listaMensagensBubble() {
@@ -118,15 +236,19 @@ class _PacientePageState extends State<PacientePage> {
     ];
   }
 
+  voltar() {
+    Navigator.popUntil(context, (r) => r.settings.name == Paginas.PACIENTES);
+  }
+
   Widget getOpcaoDrawer(
-      {String texto, IconData iconeInicio, IconData iconeFim, int vaiPara}) {
+      {String texto, IconData iconeInicio, IconData iconeFim, String vaiPara}) {
     return ListTile(
       title: Text(texto),
       leading: Icon(iconeInicio),
       trailing: Icon(iconeFim),
       onTap: () {
         Navigator.of(context).pop();
-        HomePage.mudarPagina(vaiPara);
+        Navigator.pushNamed(context, vaiPara);
       },
     );
   }
@@ -135,12 +257,12 @@ class _PacientePageState extends State<PacientePage> {
     var lista = [corpoBarra()];
     if (estado == PacientePageEstado.PARADO) {
       lista.add(SizedBox(
-        width: Tela.x(context, 2),
+        width: Tela.x(context, 1.5),
       ));
       lista.add(botaoGravarAudio());
     } else if (estado == PacientePageEstado.ESCREVENDO) {
       lista.add(SizedBox(
-        width: Tela.x(context, 2),
+        width: Tela.x(context, 1.5),
       ));
       lista.add(botaoEnviarMensagem());
     } else if (estado == PacientePageEstado.GRAVANDO_AUDIO) {
@@ -148,7 +270,7 @@ class _PacientePageState extends State<PacientePage> {
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
-      mainAxisSize: MainAxisSize.max,
+      mainAxisSize: MainAxisSize.min,
       children: lista,
     );
   }
@@ -162,7 +284,7 @@ class _PacientePageState extends State<PacientePage> {
         width: Tela.x(context, largura),
         height: Tela.y(context, 5),
         child: Padding(
-          padding: EdgeInsets.only(left: 15),
+          padding: EdgeInsets.only(left: Tela.x(context, 7)),
           child: corpoBarraInterno(),
         ),
       ),
@@ -174,11 +296,11 @@ class _PacientePageState extends State<PacientePage> {
     if (estado == PacientePageEstado.PARADO) {
       componentes.add(input());
       componentes.add(botaoAnexar());
-      componentes.add(botaoTirarFoto());
+      componentes.add(botaoCamera());
     } else if (estado == PacientePageEstado.ESCREVENDO ||
         estado == PacientePageEstado.GRAVANDO_AUDIO) {
       componentes.add(input());
-      componentes.add(botaoTirarFoto());
+      componentes.add(botaoCamera());
     }
     return Row(
       mainAxisSize: MainAxisSize.max,
@@ -209,14 +331,25 @@ class _PacientePageState extends State<PacientePage> {
       icon: Icon(Icons.arrow_forward),
       onPressed: () {
         Mensagem mensagem = Mensagem(
-          texto: barraTexto.text,
-          paciente: Paciente.mostrado,
-        );
-
+            texto: barraTexto.text,
+            paciente: Paciente.mostrado,
+            grupo: Grupo.mostrado);
+        mensagem.salvar();
         setState(() {
-          mensagem.salvar();
           barraTexto.text = '';
           estado = PacientePageEstado.PARADO;
+        });
+      },
+    );
+  }
+
+  Widget botaoCamera() {
+    return IconButton(
+      color: Colors.black,
+      icon: Icon(Icons.camera_alt),
+      onPressed: () {
+        pegarImagem(ImageSource.camera).then((arquivo) {
+          criarExame(arquivo);
         });
       },
     );
@@ -226,8 +359,55 @@ class _PacientePageState extends State<PacientePage> {
     return IconButton(
       color: Colors.black,
       icon: Icon(Icons.attach_file),
-      onPressed: () {},
+      onPressed: () {
+        pegarImagem(ImageSource.gallery).then((arquivo) {
+          criarExame(arquivo);
+        });
+      },
     );
+  }
+
+  criarExame(arquivo) {
+    if (arquivo != null) {
+      print('###Tamnho do arquivo: ${arquivo.lengthSync()}###');
+      List<String> partes = arquivo.path.split('.');
+      String ultimaParte = partes.last;
+      Mensagem msg;
+      RecursoMidia recurso = RecursoMidia(
+          tipo: TipoRecurso.IMAGEM,
+          grupo: Paciente.mostrado.grupo,
+          paciente: Paciente.mostrado,
+          extensao: ultimaParte);
+      recurso.salvar();
+      recurso.upload(
+          aoSubir: (resultado) {
+            msg.tipo = TipoMensagem.IMAGEM;
+            msg.salvar();
+            var exame = Exame(
+                descricao: 'Imagem',
+                data: DateTime.now(),
+                paciente: Paciente.mostrado,
+                recursoId: recurso.id);
+            exame.salvar();
+          },
+          caminhoLocal: arquivo.path,
+          progresso: (evento, percentual) {
+            msg.texto = '${percentual.toStringAsFixed(2)} %';
+            print(msg.texto);
+            msg.salvar();
+          });
+      msg = Mensagem(
+          tipo: TipoMensagem.TEXTO,
+          grupo: Grupo.mostrado,
+          paciente: Paciente.mostrado,
+          recursoMidia: recurso,
+          texto: 'Enviando...');
+      msg.salvar();
+    }
+  }
+
+  Future<File> pegarImagem(ImageSource fonte) async {
+    return await ImagePicker.pickImage(source: fonte);
   }
 
   Widget botaoTirarFoto() {
@@ -239,6 +419,43 @@ class _PacientePageState extends State<PacientePage> {
   }
 
   Widget botaoGravarAudio() {
+    return Gravador(
+      aposGravar: (arquivo) {
+        if (arquivo != null) {
+          print('###Tamnho do arquivo: ${arquivo.lengthSync()}###');
+          List<String> partes = arquivo.path.split('.');
+          String ultimaParte = partes.last;
+          Mensagem msg;
+          RecursoMidia recurso = RecursoMidia(
+              tipo: TipoRecurso.AUDIO,
+              grupo: Paciente.mostrado.grupo,
+              paciente: Paciente.mostrado,
+              extensao: ultimaParte);
+          recurso.salvar();
+          recurso.upload(
+              aoSubir: (resultado) {
+                msg.tipo = TipoMensagem.AUDIO;
+                msg.salvar();
+              },
+              caminhoLocal: arquivo.path,
+              progresso: (evento, percentual) {
+                msg.texto = '${percentual.toStringAsFixed(2)} %';
+                print(msg.texto);
+                msg.salvar();
+              });
+          msg = Mensagem(
+              tipo: TipoMensagem.TEXTO,
+              grupo: Grupo.mostrado,
+              paciente: Paciente.mostrado,
+              recursoMidia: recurso,
+              texto: 'Enviando...');
+          msg.salvar();
+        }
+      },
+    );
+  }
+
+  Widget botaoGravarAudio2() {
     Widget botao;
     if (estado == PacientePageEstado.GRAVANDO_AUDIO) {
       botao = Row(

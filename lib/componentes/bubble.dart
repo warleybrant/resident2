@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+enum TipoBubble { TEXTO, AUDIO }
+
 class Bubble extends StatelessWidget {
-  Bubble({this.message, this.time, this.delivered, this.isMe});
+  Bubble({this.message, this.time, this.delivered, this.isMe, this.tipo});
 
   final String message, time;
   final delivered, isMe;
+  final TipoBubble tipo;
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +68,7 @@ class Bubble extends StatelessWidget {
               )
             ],
           ),
-        )
+        ),
       ],
     );
   }

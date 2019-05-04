@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/paginas/home_page.dart';
+import 'package:resident/main.dart';
 import 'package:resident/utils/cores.dart';
+import 'package:resident/utils/paginas.dart';
+import 'package:resident/utils/proxy_firestore.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,6 +17,28 @@ class GruposPage extends StatefulWidget {
 }
 
 class _GruposPageState extends State<GruposPage> {
+  int atualizacoes = 0;
+  List<Grupo> grupos = [];
+
+  @override
+  void initState() {
+    grupos = Grupo.lista;
+    ProxyFirestore.observar(Paginas.GRUPOS, () {
+      if (mounted) {
+        setState(() {
+          grupos = Grupo.lista;
+        });
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    ProxyFirestore.pararDeObservar(Paginas.GRUPOS);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,7 +68,7 @@ class _GruposPageState extends State<GruposPage> {
 
   void criarGrupo() {
     Grupo.mostrado = Grupo();
-    HomePage.mudarPagina(Paginas.GRUPO_CONFIG);
+    Navigator.pushNamed(context, Paginas.GRUPO_CONFIG);
   }
 
   List<Widget> drawerItens() {
@@ -59,7 +83,7 @@ class _GruposPageState extends State<GruposPage> {
         leading: Icon(Icons.group),
         onTap: () {
           Navigator.pop(context);
-          HomePage.mudarPagina(Paginas.CONTATOS);
+          Navigator.pushNamed(context, Paginas.CONTATOS);
         },
       ),
       Expanded(
@@ -70,16 +94,17 @@ class _GruposPageState extends State<GruposPage> {
         leading: Icon(Icons.clear),
         onTap: () {
           Usuario.deslogar();
-          HomePage.mudarPagina(Paginas.LOGIN);
+          Navigator.pushNamedAndRemoveUntil(
+              context, Paginas.LOGIN, (r) => false);
         },
       )
     ];
   }
 
   Widget listaGrupos() {
-    if (Grupo.lista == null) return Container();
+    if (grupos == null) return Container();
     List<Widget> gruposCard = [];
-    Grupo.lista.forEach((grupo) {
+    grupos.forEach((grupo) {
       gruposCard.add(cardGrupo(grupo));
     });
     return ListView(
@@ -102,7 +127,7 @@ class _GruposPageState extends State<GruposPage> {
           child: Text(grupo.nome),
           onPressed: () {
             Grupo.mostrado = grupo;
-            HomePage.mudarPagina(Paginas.PACIENTES);
+            Navigator.pushNamed(context, Paginas.PACIENTES);
           }),
     );
     Widget configuracoesGrupo = RaisedButton(
@@ -111,7 +136,7 @@ class _GruposPageState extends State<GruposPage> {
       child: Icon(Icons.build),
       onPressed: () {
         Grupo.mostrado = grupo;
-        HomePage.mudarPagina(Paginas.GRUPO_CONFIG);
+        Navigator.pushNamed(context, Paginas.GRUPO_CONFIG);
       },
     );
     List<Widget> lista = [fotoGrupo, textoGrupo, configuracoesGrupo];
@@ -140,7 +165,7 @@ class _GruposPageState extends State<GruposPage> {
       accountEmail: Text(Usuario.logado.email),
       onDetailsPressed: () {
         Navigator.of(context).pop();
-        HomePage.mudarPagina(Paginas.PERFIL);
+        Navigator.pushNamed(context, Paginas.PERFIL);
       },
     );
   }

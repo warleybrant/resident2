@@ -2,7 +2,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
-import 'package:resident/paginas/home_page.dart';
+import 'package:resident/main.dart';
+import 'package:resident/utils/paginas.dart';
+import 'package:resident/utils/proxy_firestore.dart';
 
 class PacientesPage extends StatefulWidget {
   PacientesPage();
@@ -12,6 +14,27 @@ class PacientesPage extends StatefulWidget {
 }
 
 class _PacientesPageState extends State<PacientesPage> {
+  int atualizacoes = 0;
+  List<Paciente> pacientes = [];
+  @override
+  void initState() {
+    pacientes = Paciente.porGrupo(Grupo.mostrado.id);
+    ProxyFirestore.observar(Paginas.PACIENTES, () {
+      if (mounted) {
+        setState(() {
+          pacientes = Paciente.porGrupo(Grupo.mostrado.id);
+        });
+      }
+    });
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    ProxyFirestore.pararDeObservar(Paginas.PACIENTES);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +44,8 @@ class _PacientesPageState extends State<PacientesPage> {
             icon: Icon(Icons.arrow_back),
             onPressed: () {
               Grupo.mostrado = null;
-              HomePage.mudarPagina(Paginas.GRUPOS);
+              Navigator.popUntil(
+                  context, (r) => r.settings.name == Paginas.GRUPOS);
             }),
       ),
       body: corpo(),
@@ -34,9 +58,9 @@ class _PacientesPageState extends State<PacientesPage> {
   }
 
   Widget listaPacientes() {
-    if (Paciente.lista == null) return Container();
+    if (pacientes == null) return Container();
     List<Widget> pacientesCard = [];
-    Paciente.porGrupo(Grupo.mostrado.id).forEach((paciente) {
+    pacientes.forEach((paciente) {
       pacientesCard.add(cardPaciente(paciente));
     });
     return ListView(
@@ -76,7 +100,7 @@ class _PacientesPageState extends State<PacientesPage> {
           child: Text(paciente.nome),
           onPressed: () {
             Paciente.mostrado = paciente;
-            HomePage.mudarPagina(Paginas.PACIENTE);
+            Navigator.pushNamed(context, Paginas.PACIENTE);
           }),
     );
     Widget configuracoesGrupo = RaisedButton(
@@ -85,7 +109,7 @@ class _PacientesPageState extends State<PacientesPage> {
       child: Icon(Icons.build),
       onPressed: () {
         Paciente.mostrado = paciente;
-        HomePage.mudarPagina(Paginas.PACIENTE_CONFIG);
+        Navigator.pushNamed(context, Paginas.PACIENTE_CONFIG);
       },
     );
     List<Widget> lista = [fotoGrupo, textoGrupo, configuracoesGrupo];
@@ -117,6 +141,6 @@ class _PacientesPageState extends State<PacientesPage> {
 
   void criarPaciente() {
     Paciente.mostrado = Paciente();
-    HomePage.mudarPagina(Paginas.PACIENTE_CONFIG);
+    Navigator.pushNamed(context, Paginas.PACIENTE_CONFIG);
   }
 }

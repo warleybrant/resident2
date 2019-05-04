@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:resident/entidades/medicamento.dart';
 import 'package:resident/entidades/paciente.dart';
-import 'package:resident/paginas/home_page.dart';
 import 'package:resident/utils/ferramentas.dart';
+import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 
@@ -32,7 +32,7 @@ class _MedicamentosPageState extends State<MedicamentosPage> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
-          HomePage.mudarPagina(Paginas.PACIENTE);
+          voltar();
         },
       ),
     );
@@ -70,6 +70,10 @@ class _MedicamentosPageState extends State<MedicamentosPage> {
       ));
     }
     return Stack(children: listaWidgets);
+  }
+
+  voltar() {
+    Navigator.popUntil(context, (r) => r.settings.name == Paginas.PACIENTE);
   }
 
   Widget getBotaoCriar() {

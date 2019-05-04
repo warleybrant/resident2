@@ -122,4 +122,16 @@ class Usuario {
         telefone != null &&
         telefone.isNotEmpty;
   }
+
+  static Usuario deSnap(DocumentSnapshot documento) {
+    return Usuario(
+        id: documento.documentID,
+        nome: documento.data['nome'],
+        idResidente: documento.data['idResidente'],
+        telefone: documento.data['telefone'],
+        email: documento.data['email'],
+        uid: documento.data['uid'],
+        urlFoto: documento.data['urlFoto'],
+        contatos: documento.data['contatos']);
+  }
 }
