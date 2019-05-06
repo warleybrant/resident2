@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/main.dart';
 import 'package:resident/utils/cores.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/proxy_firestore.dart';

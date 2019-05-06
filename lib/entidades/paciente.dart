@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:resident/entidades/audio.dart';
 import 'package:resident/entidades/exame.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/medicamento.dart';
 import 'package:resident/entidades/mensagem.dart';
 import 'package:resident/utils/ferramentas.dart';
+import 'package:resident/utils/padroes.dart';
+import 'package:resident/utils/proxy_storage.dart';
 
 class Paciente {
   static Paciente mostrado;
@@ -35,7 +40,9 @@ class Paciente {
     this.hda,
     this.hp,
     this.urlFoto,
-  });
+  }) {
+    if (urlFoto == null) urlFoto = Padroes.FOTO_PACIENTE_URL;
+  }
 
   static List<Paciente> getTodosOsPacientes() {
     var lista = <Paciente>[];
@@ -65,12 +72,34 @@ class Paciente {
     return _exames;
   }
 
-  void salvar() {
+  void salvar(
+      {File fotoParaUpload,
+      Function aoSalvarFotoNoServidor,
+      Function(double) progresso}) {
     if (id == null) {
       _criar();
       return;
+    } else {
+      _alterar();
     }
-    _alterar();
+
+    if (fotoParaUpload != null) {
+      ProxyStorage.uploadArquivo(
+        fotoParaUpload,
+        'fotos_capa/pacientes/$id.png',
+        progresso: progresso,
+        aoSubir: (r) {
+          var ref = FirebaseStorage.instance
+              .ref()
+              .child('fotos_capa/pacientes/$id.png');
+          ref.getDownloadURL().then((_) {
+            this.urlFoto = _;
+            this.salvar();
+            aoSalvarFotoNoServidor();
+          });
+        },
+      );
+    }
   }
 
   void _criar() {
@@ -165,15 +194,15 @@ class Paciente {
 
   static Paciente deSnap(DocumentSnapshot documento) {
     return Paciente(
-      id: documento.documentID,
-      nome: documento.data['nome'],
-      grupo: Grupo.buscaPorId(documento.data['grupo']),
-      telefone: documento.data['telefone'],
-      entrada: Ferramentas.millisecondsParaData(documento.data['entrada']),
-      hp: documento.data['hp'],
-      hda: documento.data['hda'],
-      hd: documento.data['hd'],
-      alta: documento.data['alta'],
-    );
+        id: documento.documentID,
+        nome: documento.data['nome'],
+        grupo: Grupo.buscaPorId(documento.data['grupo']),
+        telefone: documento.data['telefone'],
+        entrada: Ferramentas.millisecondsParaData(documento.data['entrada']),
+        hp: documento.data['hp'],
+        hda: documento.data['hda'],
+        hd: documento.data['hd'],
+        alta: documento.data['alta'],
+        urlFoto: documento.data['urlFoto']);
   }
 }

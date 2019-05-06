@@ -30,13 +30,20 @@ class Ferramentas {
     }
   }
 
-  static Widget barreiraModal(Function aoTocar) {
+  static Widget barreiraModal(Function aoTocar, {double porcentagem}) {
     return InkWell(
       onTap: aoTocar,
       child: Opacity(
         opacity: 0.7,
         child: Container(
           color: Colors.black,
+          child: Center(
+            child: Card(
+              child: CircularProgressIndicator(
+                value: porcentagem,
+              ),
+            ),
+          ),
         ),
       ),
     );

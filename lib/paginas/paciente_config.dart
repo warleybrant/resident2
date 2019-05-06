@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:resident/componentes/avatar_alteravel.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/utils/ferramentas.dart';
@@ -19,6 +22,11 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
   MaskedTextController entradaController =
       MaskedTextController(text: '', mask: '00/00/2000');
   final _formKey = GlobalKey<FormState>();
+
+  bool carregando = false;
+  bool salvandoImagem = false;
+  File arquivoImagem;
+  double progressoUpload = 0;
 
   @override
   void initState() {
@@ -55,7 +63,9 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
 
   Widget getTitulo() {
     String titulo = 'Novo Paciente';
-    if (Paciente.mostrado.nome.isNotEmpty) titulo = Paciente.mostrado.nome;
+    if (Paciente.mostrado != null &&
+        Paciente.mostrado.nome != null &&
+        Paciente.mostrado.nome.isNotEmpty) titulo = Paciente.mostrado.nome;
     return Text(
       titulo,
       style: getEstiloTitulo(),
@@ -63,10 +73,33 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
   }
 
   List<Widget> getAcoes() {
-    if (Paciente.mostrado.id != null) {
+    if (Paciente.mostrado != null && Paciente.mostrado.id != null) {
       return [getBotaoAcaoExcluirPaciente()];
     }
     return [];
+  }
+
+  fotoPaciente() {
+    return AvatarAlteravel(
+      Tela.x(context, 40),
+      Tela.x(context, 40),
+      Paciente.mostrado.urlFoto,
+      arquivoImagem,
+      aoSelecionarImagem: (File arquivoSelecionado) {
+        if (arquivoSelecionado != null) {
+          setState(() {
+            arquivoImagem = arquivoSelecionado;
+            salvandoImagem = true;
+            carregando = false;
+          });
+        }
+      },
+      aoBuscarImagem: () {
+        setState(() {
+          carregando = true;
+        });
+      },
+    );
   }
 
   Widget getBotaoAcaoExcluirPaciente() {
@@ -125,20 +158,48 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
   }
 
   Widget getCorpo() {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-          horizontal: Tela.x(context, 5), vertical: Tela.y(context, 5)),
-      child: Form(
-        key: _formKey,
-        child: ListView(
-          children: getListaCampos(),
-        ),
+    if (Paciente.mostrado == null) return Container();
+    var _lista = <Widget>[];
+    _lista.add(ListView(
+      children: <Widget>[form()],
+    ));
+
+    if (carregando) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          carregando = false;
+        });
+      }, porcentagem: progressoUpload / 100));
+    }
+
+    return Stack(
+      children: _lista,
+    );
+  }
+
+  form() {
+    return Form(
+      child: Column(
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: getListaCampos(),
       ),
+      key: _formKey,
     );
   }
 
   List<Widget> getListaCampos() {
     return [
+      SizedBox(
+        height: Tela.y(context, 1),
+      ),
+      Center(
+        child: fotoPaciente(),
+      ),
+      SizedBox(
+        height: Tela.y(context, 1),
+      ),
       getCampoNome(),
       SizedBox(
         height: Tela.y(context, 5),
@@ -148,35 +209,46 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
   }
 
   Widget getCampoNome() {
-    return TextFormField(
-      controller: nomeController,
-      validator: (_) {
-        if (_.isEmpty) return "Nome não pode ser vazio";
-        if (_.length < 3) return "Nome muito curto";
-      },
-      decoration: getDecoracaoCampo(label: 'Nome:'),
+    return Padding(
+      padding: EdgeInsets.symmetric(
+          horizontal: Tela.x(context, 6), vertical: Tela.y(context, 1)),
+      child: TextFormField(
+        controller: nomeController,
+        validator: (_) {
+          if (_.isEmpty) return "Nome não pode ser vazio";
+          if (_.length < 3) return "Nome muito curto";
+        },
+        decoration: getDecoracaoCampo(label: 'Nome:'),
+      ),
     );
   }
 
   Widget getCampoEntrada() {
-    return TextFormField(
-      controller: entradaController,
-      keyboardType: TextInputType.number,
-      validator: (_) {
-        if (_.isEmpty) return "Campo não pode ser vazio";
-        if (Ferramentas.stringParaData(_) == null) return "Data inválida";
-        int dia = int.parse(_.substring(0, 2));
-        int mes = int.parse(_.substring(3, 5));
-        int ano = int.parse(_.substring(6, 10));
-        if (dia < 1 ||
-            dia > 31 ||
-            mes < 1 ||
-            mes > 12 ||
-            ano < 2000 ||
-            ano > 3000) return "Data inválida";
-      },
-      decoration: getDecoracaoCampo(label: 'Dt. Entrada:'),
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: Tela.x(context, 6),
+        vertical: Tela.y(context, 1),
+      ),
+      child: TextFormField(
+        controller: entradaController,
+        keyboardType: TextInputType.number,
+        validator: (_) {
+          if (_.isEmpty) return "Campo não pode ser vazio";
+          if (Ferramentas.stringParaData(_) == null) return "Data inválida";
+          int dia = int.parse(_.substring(0, 2));
+          int mes = int.parse(_.substring(3, 5));
+          int ano = int.parse(_.substring(6, 10));
+          if (dia < 1 ||
+              dia > 31 ||
+              mes < 1 ||
+              mes > 12 ||
+              ano < 2000 ||
+              ano > 3000) return "Data inválida";
+        },
+        decoration: getDecoracaoCampo(label: 'Dt. Entrada:'),
+      ),
     );
+    ;
   }
 
   TextStyle getEstiloCampo() {
@@ -201,10 +273,28 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
           Paciente.mostrado.entrada =
               Ferramentas.stringParaData(entradaController.text);
           Paciente.mostrado.grupo = Grupo.mostrado;
-          // Paciente.mostrado.urlFoto
 
-          Paciente.mostrado.salvar();
-          voltar();
+          Paciente.mostrado.salvar(
+              fotoParaUpload: arquivoImagem,
+              progresso: (_) {
+                if (mounted) {
+                  setState(() {
+                    progressoUpload = _;
+                  });
+                }
+              },
+              aoSalvarFotoNoServidor: () {
+                if (mounted) {
+                  setState(() {
+                    salvandoImagem = false;
+                  });
+                  voltar();
+                }
+              });
+          setState(() {
+            carregando = true;
+          });
+          if (arquivoImagem == null) voltar();
         }
       },
     );

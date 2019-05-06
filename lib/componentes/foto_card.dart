@@ -15,12 +15,6 @@ class FotoCard extends StatelessWidget {
         : null;
 
     Widget fotoWidget = foto != null
-//        ? SizedBox(
-//            width: width,
-//            child: CircleAvatar(
-//              backgroundImage: foto,
-//            ),
-//          )
         ? SizedBox(
             width: width,
             height: height,

@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:resident/componentes/avatar_alteravel.dart';
 import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/main.dart';
 import 'package:resident/utils/cores.dart';
+import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 
@@ -17,6 +20,10 @@ class GrupoPage extends StatefulWidget {
 class _GrupoPageState extends State<GrupoPage> {
   TextEditingController nomeGrupo = TextEditingController(text: '');
   Grupo grupo;
+  bool carregando = false;
+  bool salvandoImagem = false;
+  File arquivoImagem;
+  double progressoUpload = 0;
   List contatosSelecionados;
   final _formKey = GlobalKey<FormState>();
 
@@ -45,9 +52,14 @@ class _GrupoPageState extends State<GrupoPage> {
   }
 
   Widget appBar() {
+    String texto = "Criação de Grupo";
+
+    if (Grupo.mostrado != null && Grupo.mostrado.nome != null) {
+      texto = Grupo.mostrado.nome;
+    }
+
     return AppBar(
-      title: Text(
-          '${Grupo.mostrado != null && Grupo.mostrado.id == null ? "Criação de Grupo" : Grupo.mostrado.nome}'),
+      title: Text(texto),
       leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
@@ -58,7 +70,7 @@ class _GrupoPageState extends State<GrupoPage> {
   }
 
   List<Widget> getListaAcoes() {
-    if (Grupo.mostrado.id == null) return [];
+    if (Grupo.mostrado != null && Grupo.mostrado.id == null) return [];
     return [
       getBotaoAcaoExcluirGrupo(),
       getBotaoSairDoGrupo(),
@@ -168,8 +180,20 @@ class _GrupoPageState extends State<GrupoPage> {
 
   Widget corpo() {
     if (Grupo.mostrado == null) return Container();
-    return ListView(
+    var _lista = <Widget>[];
+    _lista.add(ListView(
       children: <Widget>[form()],
+    ));
+
+    if (carregando) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          carregando = false;
+        });
+      }, porcentagem: progressoUpload / 100));
+    }
+    return Stack(
+      children: _lista,
     );
   }
 
@@ -179,13 +203,48 @@ class _GrupoPageState extends State<GrupoPage> {
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          nomeGrupoInput(),
-//          btnAddContato(),
-          listaContatosSelecionados()
-        ],
+        children: getListaCampos(),
       ),
       key: _formKey,
+    );
+  }
+
+  getListaCampos() {
+    return <Widget>[
+      SizedBox(
+        height: Tela.y(context, 1),
+      ),
+      Center(
+        child: fotoGrupo(),
+      ),
+      SizedBox(
+        height: Tela.y(context, 1),
+      ),
+      nomeGrupoInput(),
+      listaContatosSelecionados()
+    ];
+  }
+
+  fotoGrupo() {
+    return AvatarAlteravel(
+      Tela.x(context, 40),
+      Tela.x(context, 40),
+      Grupo.mostrado.urlFoto,
+      arquivoImagem,
+      aoSelecionarImagem: (File arquivoSelecionado) {
+        if (arquivoSelecionado != null) {
+          setState(() {
+            arquivoImagem = arquivoSelecionado;
+            salvandoImagem = true;
+            carregando = false;
+          });
+        }
+      },
+      aoBuscarImagem: () {
+        setState(() {
+          carregando = true;
+        });
+      },
     );
   }
 
@@ -225,7 +284,7 @@ class _GrupoPageState extends State<GrupoPage> {
       padding: EdgeInsets.symmetric(horizontal: Tela.x(context, 5)),
       child: Container(
         color: Colors.white12,
-        height: Tela.y(context, 60),
+        height: Tela.y(context, 40),
         child: ListView(
           children: contatosGrupo(),
         ),
@@ -254,7 +313,7 @@ class _GrupoPageState extends State<GrupoPage> {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            FotoCard(contato.urlFoto, Tela.x(context, 10), Tela.y(context, 10)),
+            FotoCard(contato.urlFoto, Tela.x(context, 10), Tela.x(context, 10)),
             SizedBox(
               width: Tela.x(context, 1),
             ),
@@ -289,9 +348,31 @@ class _GrupoPageState extends State<GrupoPage> {
       if (!contatosSelecionados.contains(Usuario.logado.id))
         contatosSelecionados.add(Usuario.logado.id);
       Grupo.mostrado.setContatosPelosIds(contatosSelecionados);
-      Grupo.mostrado.salvar();
-      FocusScope.of(context).requestFocus(new FocusNode());
-      voltar();
+      Grupo.mostrado.salvar(
+          fotoParaUpload: arquivoImagem,
+          progresso: (_) {
+            if (mounted) {
+              setState(() {
+                progressoUpload = _;
+              });
+            }
+          },
+          aoSalvarFotoNoServidor: () {
+            if (mounted) {
+              setState(() {
+                salvandoImagem = false;
+              });
+              FocusScope.of(context).requestFocus(new FocusNode());
+              voltar();
+            }
+          });
+      setState(() {
+        carregando = true;
+      });
+      if (arquivoImagem == null) {
+        FocusScope.of(context).requestFocus(new FocusNode());
+        voltar();
+      }
     }
   }
 

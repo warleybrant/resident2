@@ -1,6 +1,11 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
+import 'package:resident/utils/padroes.dart';
+import 'package:resident/utils/proxy_storage.dart';
 
 class Grupo {
   static Grupo mostrado;
@@ -16,12 +21,31 @@ class Grupo {
     if (contatos == null) contatos = [Usuario.logado.uid];
   }
 
-  void salvar() {
+  void salvar(
+      {File fotoParaUpload,
+      Function aoSalvarFotoNoServidor,
+      Function(double) progresso}) async {
     if (id == null) {
       _criar();
-      return;
+    } else {
+      _alterar();
     }
-    _alterar();
+    if (fotoParaUpload != null) {
+      ProxyStorage.uploadArquivo(
+        fotoParaUpload,
+        'fotos_capa/grupos/$id.png',
+        progresso: progresso,
+        aoSubir: (r) {
+          var ref =
+              FirebaseStorage.instance.ref().child('fotos_capa/grupos/$id.png');
+          ref.getDownloadURL().then((_) {
+            this.urlFoto = _;
+            this.salvar();
+            aoSalvarFotoNoServidor();
+          });
+        },
+      );
+    }
   }
 
   void _criar() {
@@ -34,6 +58,11 @@ class Grupo {
   void _alterar() {
     var documento = Firestore.instance.collection('grupos').document(id);
     setData(documento);
+  }
+
+  String getUrlFoto() {
+    if (urlFoto == null) return Padroes.FOTO_GRUPO_URL;
+    return urlFoto;
   }
 
   static List<dynamic> todosIds() {
@@ -59,7 +88,7 @@ class Grupo {
       'nome': nome,
       'descricao': descricao,
       'contatos': contatos,
-      'urlFoto': urlFoto
+      'urlFoto': urlFoto,
     });
   }
 
@@ -95,10 +124,11 @@ class Grupo {
 
   static Grupo deSnap(DocumentSnapshot documento) {
     return Grupo(
-        id: documento.documentID,
-        nome: documento.data['nome'],
-        descricao: documento.data['descricao'],
-        contatos: documento.data['contatos'],
-        urlFoto: documento.data['urlFoto']);
+      id: documento.documentID,
+      nome: documento.data['nome'],
+      descricao: documento.data['descricao'],
+      contatos: documento.data['contatos'],
+      urlFoto: documento.data['urlFoto'],
+    );
   }
 }

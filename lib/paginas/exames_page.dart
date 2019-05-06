@@ -185,27 +185,27 @@ class _ExamesPageState extends State<ExamesPage> {
           paciente: Paciente.mostrado,
           extensao: ultimaParte);
       recurso.salvar();
-      recurso.upload(
-          aoSubir: (resultado) {
-            msg.tipo = TipoMensagem.IMAGEM;
-            msg.salvar();
-            Exame exame = exameDoForm();
-            exame.recursoId = recurso.id;
-            exame.descricao = 'Anexo';
-            exame.salvar();
-            setState(() {
-              carregando = false;
-            });
-          },
-          caminhoLocal: arquivo.path,
-          progresso: (evento, percentual) {
-            setState(() {
-              carregando = true;
-            });
-            msg.texto = '${percentual.toStringAsFixed(2)} %';
-            print(msg.texto);
-            msg.salvar();
-          });
+      // recurso.upload(
+      //     aoSubir: (resultado) {
+      //       msg.tipo = TipoMensagem.IMAGEM;
+      //       msg.salvar();
+      //       Exame exame = exameDoForm();
+      //       exame.recursoId = recurso.id;
+      //       exame.descricao = 'Anexo';
+      //       exame.salvar();
+      //       setState(() {
+      //         carregando = false;
+      //       });
+      //     },
+      //     caminhoLocal: arquivo.path,
+      //     progresso: (evento, percentual) {
+      //       setState(() {
+      //         carregando = true;
+      //       });
+      //       msg.texto = '${percentual.toStringAsFixed(2)} %';
+      //       print(msg.texto);
+      //       msg.salvar();
+      //     });
       msg = Mensagem(
           tipo: TipoMensagem.TEXTO,
           grupo: Grupo.mostrado,

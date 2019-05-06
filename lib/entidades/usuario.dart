@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:resident/utils/ferramentas.dart';
+import 'package:resident/utils/padroes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Usuario {
@@ -24,7 +25,9 @@ class Usuario {
     this.uid,
     this.urlFoto,
     this.contatos,
-  });
+  }) {
+    if (urlFoto == null) urlFoto = Padroes.FOTO_USUARIO_URL;
+  }
 
   static Usuario buscaPorId(String id) {
     if (lista == null || lista.length == 0) return null;

@@ -369,7 +369,7 @@ class _PacientePageState extends State<PacientePage> {
 
   criarExame(arquivo) {
     if (arquivo != null) {
-      print('###Tamnho do arquivo: ${arquivo.lengthSync()}###');
+      // print('###Tamnho do arquivo: ${arquivo.lengthSync()}###');
       List<String> partes = arquivo.path.split('.');
       String ultimaParte = partes.last;
       Mensagem msg;
@@ -379,23 +379,22 @@ class _PacientePageState extends State<PacientePage> {
           paciente: Paciente.mostrado,
           extensao: ultimaParte);
       recurso.salvar();
-      recurso.upload(
-          aoSubir: (resultado) {
-            msg.tipo = TipoMensagem.IMAGEM;
-            msg.salvar();
-            var exame = Exame(
-                descricao: 'Imagem',
-                data: DateTime.now(),
-                paciente: Paciente.mostrado,
-                recursoId: recurso.id);
-            exame.salvar();
-          },
-          caminhoLocal: arquivo.path,
-          progresso: (evento, percentual) {
-            msg.texto = '${percentual.toStringAsFixed(2)} %';
-            print(msg.texto);
-            msg.salvar();
-          });
+
+      recurso.upload(arquivo, aoSubir: (resultado) {
+        msg.tipo = TipoMensagem.IMAGEM;
+        msg.salvar();
+        var exame = Exame(
+            descricao: 'Imagem',
+            data: DateTime.now(),
+            paciente: Paciente.mostrado,
+            recursoId: recurso.id);
+        exame.salvar();
+      }, progresso: (percentual) {
+        msg.texto = '${percentual.toStringAsFixed(2)} %';
+        print(msg.texto);
+        msg.salvar();
+      });
+
       msg = Mensagem(
           tipo: TipoMensagem.TEXTO,
           grupo: Grupo.mostrado,
@@ -432,17 +431,17 @@ class _PacientePageState extends State<PacientePage> {
               paciente: Paciente.mostrado,
               extensao: ultimaParte);
           recurso.salvar();
-          recurso.upload(
-              aoSubir: (resultado) {
-                msg.tipo = TipoMensagem.AUDIO;
-                msg.salvar();
-              },
-              caminhoLocal: arquivo.path,
-              progresso: (evento, percentual) {
-                msg.texto = '${percentual.toStringAsFixed(2)} %';
-                print(msg.texto);
-                msg.salvar();
-              });
+          // recurso.upload(
+          //     aoSubir: (resultado) {
+          //       msg.tipo = TipoMensagem.AUDIO;
+          //       msg.salvar();
+          //     },
+          //     caminhoLocal: arquivo.path,
+          //     progresso: (evento, percentual) {
+          //       msg.texto = '${percentual.toStringAsFixed(2)} %';
+          //       print(msg.texto);
+          //       msg.salvar();
+          //     });
           msg = Mensagem(
               tipo: TipoMensagem.TEXTO,
               grupo: Grupo.mostrado,
