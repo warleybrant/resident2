@@ -115,6 +115,7 @@ class _ContatosPageState extends State<ContatosPage> {
       left: Tela.x(context, 7.5),
       top: Tela.y(context, 5),
       animateWhenUpdate: false,
+      child: popupCorpo(),
     );
   }
 
@@ -373,7 +374,7 @@ class _ContatosPageState extends State<ContatosPage> {
   }
 
   Widget fotoContato(Usuario contato) {
-    if (contato.urlFoto == null) return Icon(Icons.account_circle);
+    // if (contato.urlFoto == null) return Icon(Icons.account_circle);
     return Container(
       width: 50,
       height: 50,
@@ -381,7 +382,7 @@ class _ContatosPageState extends State<ContatosPage> {
           shape: BoxShape.circle,
           image: DecorationImage(
             fit: BoxFit.cover,
-            image: CachedNetworkImageProvider(contato.urlFoto),
+            image: CachedNetworkImageProvider(contato.getUrlFoto()),
           )),
     );
   }

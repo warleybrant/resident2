@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/cores.dart';
+import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/proxy_firestore.dart';
 import 'package:resident/utils/tela.dart';
@@ -18,6 +20,7 @@ class GruposPage extends StatefulWidget {
 class _GruposPageState extends State<GruposPage> {
   int atualizacoes = 0;
   List<Grupo> grupos = [];
+  String urlFotoMostrando;
 
   @override
   void initState() {
@@ -45,7 +48,7 @@ class _GruposPageState extends State<GruposPage> {
         elevation: 5,
         title: Text('Grupos'),
       ),
-      body: listaGrupos(),
+      body: getCorpo(),
       drawer: Drawer(
         child: Column(
           children: drawerItens(),
@@ -100,6 +103,27 @@ class _GruposPageState extends State<GruposPage> {
     ];
   }
 
+  getCorpo() {
+    var _lista = <Widget>[listaGrupos()];
+
+    if (urlFotoMostrando != null) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          urlFotoMostrando = null;
+        });
+      }));
+      _lista.add(ExibeImagem(
+        url: urlFotoMostrando,
+        aoTocar: () {
+          setState(() {
+            urlFotoMostrando = null;
+          });
+        },
+      ));
+    }
+    return Stack(children: _lista);
+  }
+
   Widget listaGrupos() {
     if (grupos == null) return Container();
     List<Widget> gruposCard = [];
@@ -120,7 +144,14 @@ class _GruposPageState extends State<GruposPage> {
   }
 
   Widget cardGrupo(Grupo grupo) {
-    var fotoGrupo = FotoCard(grupo.urlFoto, 80, 80);
+    var fotoGrupo = InkWell(
+      child: FotoCard(grupo.getUrlFoto(), 80, 80),
+      onTap: () {
+        setState(() {
+          urlFotoMostrando = grupo.getUrlFoto();
+        });
+      },
+    );
     Widget textoGrupo = Expanded(
       child: MaterialButton(
           child: Text(grupo.nome),
@@ -159,8 +190,16 @@ class _GruposPageState extends State<GruposPage> {
   Widget getDrawerHeader() {
     return UserAccountsDrawerHeader(
       accountName: Text(Usuario.logado.getIdentificacao()),
-      currentAccountPicture: FotoCard(
-          Usuario.logado.urlFoto, Tela.x(context, 10), Tela.y(context, 10)),
+      currentAccountPicture: InkWell(
+        child: FotoCard(
+            Usuario.logado.urlFoto, Tela.x(context, 10), Tela.y(context, 10)),
+        onTap: () {
+          setState(() {
+            urlFotoMostrando = Usuario.logado.urlFoto;
+          });
+          Navigator.pop(context);
+        },
+      ),
       accountEmail: Text(Usuario.logado.email),
       onDetailsPressed: () {
         Navigator.of(context).pop();

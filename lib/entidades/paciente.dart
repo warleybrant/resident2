@@ -40,9 +40,7 @@ class Paciente {
     this.hda,
     this.hp,
     this.urlFoto,
-  }) {
-    if (urlFoto == null) urlFoto = Padroes.FOTO_PACIENTE_URL;
-  }
+  });
 
   static List<Paciente> getTodosOsPacientes() {
     var lista = <Paciente>[];
@@ -50,6 +48,10 @@ class Paciente {
       lista.addAll(valor);
     });
     return lista;
+  }
+
+  getUrlFoto() {
+    return urlFoto != null ? urlFoto : Padroes.FOTO_PACIENTE_URL;
   }
 
   List<Mensagem> getMensagens() {

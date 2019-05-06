@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
-import 'package:resident/main.dart';
+import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/proxy_firestore.dart';
 
@@ -16,6 +17,8 @@ class PacientesPage extends StatefulWidget {
 class _PacientesPageState extends State<PacientesPage> {
   int atualizacoes = 0;
   List<Paciente> pacientes = [];
+  String urlFotoMostrando;
+
   @override
   void initState() {
     pacientes = Paciente.porGrupo(Grupo.mostrado.id);
@@ -54,7 +57,25 @@ class _PacientesPageState extends State<PacientesPage> {
   }
 
   Widget corpo() {
-    return listaPacientes();
+    var _lista = <Widget>[listaPacientes()];
+
+    if (urlFotoMostrando != null) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          urlFotoMostrando = null;
+        });
+      }));
+      _lista.add(ExibeImagem(
+        url: urlFotoMostrando,
+        aoTocar: () {
+          setState(() {
+            urlFotoMostrando = null;
+          });
+        },
+      ));
+    }
+
+    return Stack(children: _lista);
   }
 
   Widget listaPacientes() {
@@ -69,8 +90,9 @@ class _PacientesPageState extends State<PacientesPage> {
   }
 
   dynamic getFoto(Paciente paciente) {
-    var foto = paciente.urlFoto != null
-        ? CachedNetworkImageProvider(paciente.urlFoto, errorListener: () {})
+    var foto = paciente.getUrlFoto() != null
+        ? CachedNetworkImageProvider(paciente.getUrlFoto(),
+            errorListener: () {})
         : null;
     return foto;
   }
@@ -95,6 +117,15 @@ class _PacientesPageState extends State<PacientesPage> {
               child: Icon(Icons.add_a_photo),
             ),
           );
+
+    fotoGrupo = InkWell(
+      child: fotoGrupo,
+      onTap: () {
+        setState(() {
+          urlFotoMostrando = paciente.getUrlFoto();
+        });
+      },
+    );
     Widget textoGrupo = Expanded(
       child: MaterialButton(
           child: Text(paciente.nome),

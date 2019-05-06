@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/avatar_alteravel.dart';
+import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
@@ -25,6 +26,8 @@ class _PerfilPageState extends State<PerfilPage> {
   bool salvandoImagem = false;
   File arquivoImagem;
   double progressoUpload = 0;
+  String urlFotoMostrando;
+  File arquivoMostrando;
 
   @override
   void initState() {
@@ -76,6 +79,38 @@ class _PerfilPageState extends State<PerfilPage> {
           carregando = false;
         });
       }, porcentagem: progressoUpload / 100));
+    }
+
+    if (urlFotoMostrando != null) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          urlFotoMostrando = null;
+        });
+      }));
+      _lista.add(ExibeImagem(
+        url: urlFotoMostrando,
+        aoTocar: () {
+          setState(() {
+            urlFotoMostrando = null;
+          });
+        },
+      ));
+    }
+
+    if (arquivoMostrando != null) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          arquivoMostrando = null;
+        });
+      }));
+      _lista.add(ExibeImagem(
+        arquivo: arquivoMostrando,
+        aoTocar: () {
+          setState(() {
+            arquivoMostrando = null;
+          });
+        },
+      ));
     }
 
     return Stack(
@@ -138,7 +173,22 @@ class _PerfilPageState extends State<PerfilPage> {
         height: Tela.y(context, 5),
       ),
       Center(
-        child: fotoUsuario(),
+        child: InkWell(
+          child: fotoUsuario(),
+          onTap: () {
+            setState(() {
+              if (arquivoImagem != null) {
+                setState(() {
+                  arquivoMostrando = arquivoImagem;
+                });
+              } else {
+                setState(() {
+                  urlFotoMostrando = Usuario.logado.urlFoto;
+                });
+              }
+            });
+          },
+        ),
       ),
       SizedBox(
         height: Tela.y(context, 5),

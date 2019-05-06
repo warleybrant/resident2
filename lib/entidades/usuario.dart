@@ -25,8 +25,11 @@ class Usuario {
     this.uid,
     this.urlFoto,
     this.contatos,
-  }) {
-    if (urlFoto == null) urlFoto = Padroes.FOTO_USUARIO_URL;
+  });
+
+  getUrlFoto() {
+    if (urlFoto == null) return Padroes.FOTO_USUARIO_URL;
+    return urlFoto;
   }
 
   static Usuario buscaPorId(String id) {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/avatar_alteravel.dart';
+import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/componentes/foto_card.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
@@ -26,6 +27,8 @@ class _GrupoPageState extends State<GrupoPage> {
   double progressoUpload = 0;
   List contatosSelecionados;
   final _formKey = GlobalKey<FormState>();
+  String urlFotoMostrando;
+  File arquivoMostrando;
 
   @override
   void initState() {
@@ -192,6 +195,39 @@ class _GrupoPageState extends State<GrupoPage> {
         });
       }, porcentagem: progressoUpload / 100));
     }
+
+    if (urlFotoMostrando != null) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          urlFotoMostrando = null;
+        });
+      }));
+      _lista.add(ExibeImagem(
+        url: urlFotoMostrando,
+        aoTocar: () {
+          setState(() {
+            urlFotoMostrando = null;
+          });
+        },
+      ));
+    }
+
+    if (arquivoMostrando != null) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          arquivoMostrando = null;
+        });
+      }));
+      _lista.add(ExibeImagem(
+        arquivo: arquivoMostrando,
+        aoTocar: () {
+          setState(() {
+            arquivoMostrando = null;
+          });
+        },
+      ));
+    }
+
     return Stack(
       children: _lista,
     );
@@ -215,7 +251,22 @@ class _GrupoPageState extends State<GrupoPage> {
         height: Tela.y(context, 1),
       ),
       Center(
-        child: fotoGrupo(),
+        child: InkWell(
+          child: fotoGrupo(),
+          onTap: () {
+            setState(() {
+              if (arquivoImagem != null) {
+                setState(() {
+                  arquivoMostrando = arquivoImagem;
+                });
+              } else {
+                setState(() {
+                  urlFotoMostrando = Grupo.mostrado.getUrlFoto();
+                });
+              }
+            });
+          },
+        ),
       ),
       SizedBox(
         height: Tela.y(context, 1),
@@ -229,13 +280,15 @@ class _GrupoPageState extends State<GrupoPage> {
     return AvatarAlteravel(
       Tela.x(context, 40),
       Tela.x(context, 40),
-      Grupo.mostrado.urlFoto,
+      Grupo.mostrado.getUrlFoto(),
       arquivoImagem,
       aoSelecionarImagem: (File arquivoSelecionado) {
-        if (arquivoSelecionado != null) {
+        if (mounted) {
           setState(() {
-            arquivoImagem = arquivoSelecionado;
-            salvandoImagem = true;
+            if (arquivoSelecionado != null) {
+              arquivoImagem = arquivoSelecionado;
+              salvandoImagem = true;
+            }
             carregando = false;
           });
         }

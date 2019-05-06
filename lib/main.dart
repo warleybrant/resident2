@@ -23,7 +23,6 @@ import 'package:resident/paginas/pagina_inicial.dart';
 import 'package:resident/paginas/perfil_page.dart';
 import 'package:resident/utils/cores.dart';
 import 'package:resident/utils/download_upload.dart';
-import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
 
 Future<void> main() async {

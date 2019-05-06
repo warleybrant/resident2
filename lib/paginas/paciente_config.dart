@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/avatar_alteravel.dart';
+import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/utils/ferramentas.dart';
@@ -22,6 +23,8 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
   MaskedTextController entradaController =
       MaskedTextController(text: '', mask: '00/00/2000');
   final _formKey = GlobalKey<FormState>();
+  String urlFotoMostrando;
+  File arquivoMostrando;
 
   bool carregando = false;
   bool salvandoImagem = false;
@@ -83,7 +86,7 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
     return AvatarAlteravel(
       Tela.x(context, 40),
       Tela.x(context, 40),
-      Paciente.mostrado.urlFoto,
+      Paciente.mostrado.getUrlFoto(),
       arquivoImagem,
       aoSelecionarImagem: (File arquivoSelecionado) {
         if (arquivoSelecionado != null) {
@@ -172,6 +175,38 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
       }, porcentagem: progressoUpload / 100));
     }
 
+    if (urlFotoMostrando != null) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          urlFotoMostrando = null;
+        });
+      }));
+      _lista.add(ExibeImagem(
+        url: urlFotoMostrando,
+        aoTocar: () {
+          setState(() {
+            urlFotoMostrando = null;
+          });
+        },
+      ));
+    }
+
+    if (arquivoMostrando != null) {
+      _lista.add(Ferramentas.barreiraModal(() {
+        setState(() {
+          arquivoMostrando = null;
+        });
+      }));
+      _lista.add(ExibeImagem(
+        arquivo: arquivoMostrando,
+        aoTocar: () {
+          setState(() {
+            arquivoMostrando = null;
+          });
+        },
+      ));
+    }
+
     return Stack(
       children: _lista,
     );
@@ -195,7 +230,22 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
         height: Tela.y(context, 1),
       ),
       Center(
-        child: fotoPaciente(),
+        child: InkWell(
+          child: fotoPaciente(),
+          onTap: () {
+            setState(() {
+              if (arquivoImagem != null) {
+                setState(() {
+                  arquivoMostrando = arquivoImagem;
+                });
+              } else {
+                setState(() {
+                  urlFotoMostrando = Grupo.mostrado.getUrlFoto();
+                });
+              }
+            });
+          },
+        ),
       ),
       SizedBox(
         height: Tela.y(context, 1),

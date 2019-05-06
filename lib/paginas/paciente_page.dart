@@ -55,6 +55,8 @@ class _PacientePageState extends State<PacientePage> {
         var _lista = <Mensagem>[];
         _lista.addAll(Mensagem.porPaciente(Paciente.mostrado));
         setState(() {
+          _lista.sort((m1, m2) => m2.horaCriacao.millisecondsSinceEpoch
+              .compareTo(m1.horaCriacao.millisecondsSinceEpoch));
           mensagens = _lista;
           print('mensagens atualizadas');
           if (listaMensagensController.hasClients) {
