@@ -134,16 +134,16 @@ class _PerfilPageState extends State<PerfilPage> {
     return AvatarAlteravel(
       Tela.x(context, 40),
       Tela.x(context, 40),
-      Usuario.logado.urlFoto,
+      Usuario.logado.getUrlFoto(),
       arquivoImagem,
       aoSelecionarImagem: (File arquivoSelecionado) {
-        if (arquivoSelecionado != null) {
-          setState(() {
+        setState(() {
+          if (arquivoSelecionado != null) {
             arquivoImagem = arquivoSelecionado;
             salvandoImagem = true;
-            carregando = false;
-          });
-        }
+          }
+          carregando = false;
+        });
       },
       aoBuscarImagem: () {
         setState(() {

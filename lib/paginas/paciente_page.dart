@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:resident/componentes/balao_data.dart';
 import 'package:resident/componentes/balao_mensagem.dart';
 import 'package:resident/componentes/bubble.dart';
+import 'package:resident/componentes/bubble_texto.dart';
 import 'package:resident/componentes/gravador_som.dart';
 import 'package:resident/entidades/audio.dart';
 import 'package:resident/entidades/exame.dart';
@@ -52,11 +53,13 @@ class _PacientePageState extends State<PacientePage> {
     mensagens = Mensagem.porPaciente(Paciente.mostrado);
     ProxyFirestore.observar(Paginas.PACIENTE, () {
       if (mounted) {
+        // mensagens = List.from(mensagens);
+
         var _lista = <Mensagem>[];
         _lista.addAll(Mensagem.porPaciente(Paciente.mostrado));
+        _lista.sort((m1, m2) => m1.horaCriacao.millisecondsSinceEpoch
+            .compareTo(m2.horaCriacao.millisecondsSinceEpoch));
         setState(() {
-          _lista.sort((m1, m2) => m2.horaCriacao.millisecondsSinceEpoch
-              .compareTo(m1.horaCriacao.millisecondsSinceEpoch));
           mensagens = _lista;
           print('mensagens atualizadas');
           if (listaMensagensController.hasClients) {
@@ -163,27 +166,31 @@ class _PacientePageState extends State<PacientePage> {
       String dataFormatada =
           DateFormat('dd/MM/yyyy').format(mensagem.horaCriacao);
       var balaoData = BalaoData(mensagem.horaCriacao);
-      var balao = BalaoMensagem(
-        UniqueKey(),
-        mensagem,
-        aoTocar: () {
-          setState(() {
-            carregando = true;
-          });
-        },
-        feedback: () {
-          setState(() {
-            carregando = false;
-          });
-        },
-      );
+      var widget;
+      if (mensagem.tipo == TipoMensagem.TEXTO) {
+        widget = BubbleTexto(context, mensagem);
+      } else {
+        widget = BalaoMensagem(
+          mensagem,
+          aoTocar: () {
+            setState(() {
+              carregando = true;
+            });
+          },
+          feedback: () {
+            setState(() {
+              carregando = false;
+            });
+          },
+        );
+      }
       if (!baloesData.any((BalaoData bal) {
         return bal.getDataFormatada() == dataFormatada;
       })) {
         baloesData.add(balaoData);
         widgets.add(balaoData);
       }
-      widgets.add(balao);
+      widgets.add(widget);
     });
 
     return widgets;
@@ -433,17 +440,14 @@ class _PacientePageState extends State<PacientePage> {
               paciente: Paciente.mostrado,
               extensao: ultimaParte);
           recurso.salvar();
-          // recurso.upload(
-          //     aoSubir: (resultado) {
-          //       msg.tipo = TipoMensagem.AUDIO;
-          //       msg.salvar();
-          //     },
-          //     caminhoLocal: arquivo.path,
-          //     progresso: (evento, percentual) {
-          //       msg.texto = '${percentual.toStringAsFixed(2)} %';
-          //       print(msg.texto);
-          //       msg.salvar();
-          //     });
+          recurso.upload(arquivo, aoSubir: (resultado) {
+            msg.tipo = TipoMensagem.AUDIO;
+            msg.salvar();
+          }, progresso: (percentual) {
+            msg.texto = '${percentual.toStringAsFixed(2)} %';
+            print(msg.texto);
+            msg.salvar();
+          });
           msg = Mensagem(
               tipo: TipoMensagem.TEXTO,
               grupo: Grupo.mostrado,

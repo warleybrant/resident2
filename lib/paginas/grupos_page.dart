@@ -191,11 +191,11 @@ class _GruposPageState extends State<GruposPage> {
     return UserAccountsDrawerHeader(
       accountName: Text(Usuario.logado.getIdentificacao()),
       currentAccountPicture: InkWell(
-        child: FotoCard(
-            Usuario.logado.urlFoto, Tela.x(context, 10), Tela.y(context, 10)),
+        child: FotoCard(Usuario.logado.getUrlFoto(), Tela.x(context, 10),
+            Tela.y(context, 10)),
         onTap: () {
           setState(() {
-            urlFotoMostrando = Usuario.logado.urlFoto;
+            urlFotoMostrando = Usuario.logado.getUrlFoto();
           });
           Navigator.pop(context);
         },

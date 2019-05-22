@@ -21,6 +21,7 @@ import 'package:resident/paginas/paciente_page.dart';
 import 'package:resident/paginas/pacientes_page.dart';
 import 'package:resident/paginas/pagina_inicial.dart';
 import 'package:resident/paginas/perfil_page.dart';
+import 'package:resident/teste.dart';
 import 'package:resident/utils/cores.dart';
 import 'package:resident/utils/download_upload.dart';
 import 'package:resident/utils/paginas.dart';
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
 //        cardColor: Color(Cores.CARD_BACKGROUND),
       ),
       home: PaginaInicial(),
+      // home: Teste1(),
       routes: {
         Paginas.INICIAL: (context) => PaginaInicial(),
         Paginas.LOGIN: (context) => LoginPage(),
