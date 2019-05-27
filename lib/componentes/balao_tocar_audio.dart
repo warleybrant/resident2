@@ -83,9 +83,11 @@ class _BalaoTocarAudioState extends State<BalaoTocarAudio> {
           icon: Icon(Icons.refresh),
           onPressed: () {
             print('refresca');
-            setState(() {
-              falhaAoCarregar = false;
-            });
+            if (mounted) {
+              setState(() {
+                falhaAoCarregar = false;
+              });
+            }
             startar();
           },
         ),
@@ -147,9 +149,11 @@ class _BalaoTocarAudioState extends State<BalaoTocarAudio> {
 
   tocar() async {
     player.audioPlayerStateChangeHandler = (_) {
-      setState(() {
-        playerState = _;
-      });
+      if (mounted) {
+        setState(() {
+          playerState = _;
+        });
+      }
     };
 
     int resultado = await player.play(arquivo.path, isLocal: true);

@@ -219,6 +219,7 @@ class _ExamesPageState extends State<ExamesPage> {
   void abrirPopupCriacao(Exame exame) {
     if (exame == null) {
       exame = Exame(paciente: Paciente.mostrado, data: DateTime.now());
+      resetCampos();
     }
     Exame.mostrado = exame;
     descController.text = exame.descricao;
@@ -269,6 +270,8 @@ class _ExamesPageState extends State<ExamesPage> {
   Widget getCampoDescricaoPopupCriacao() {
     return TextFormField(
       controller: descController,
+      maxLines: 5,
+      maxLengthEnforced: true,
       decoration: getDecoracaoCampoPopupCriacao(label: 'Descrição:'),
     );
   }
@@ -278,6 +281,11 @@ class _ExamesPageState extends State<ExamesPage> {
       controller: horaAdmController,
       decoration: getDecoracaoCampoPopupCriacao(label: 'Dt. Administrada:'),
     );
+  }
+
+  resetCampos() {
+    descController.text = '';
+    horaAdmController.text = '';
   }
 
   InputDecoration getDecoracaoCampoPopupCriacao({String label}) {
@@ -346,12 +354,15 @@ class _ExamesPageState extends State<ExamesPage> {
   }
 
   Widget getLinhaExame(Exame exame) {
+    double altura;
+    if (exame.recursoId != null && exame.recursoId.isNotEmpty)
+      altura = Tela.y(context, 7);
     var _lista = <Widget>[
       Expanded(
         child: Card(
           child: Container(
             color: Colors.white,
-            height: Tela.y(context, 7),
+            height: altura,
             child: Align(
               alignment: Alignment.centerLeft,
               child: Padding(

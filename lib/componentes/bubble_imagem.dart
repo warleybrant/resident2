@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:open_file/open_file.dart';
 import 'package:resident/entidades/mensagem.dart';
 import 'package:resident/entidades/usuario.dart';
+import 'package:resident/utils/paginas.dart';
 import '../utils/tela.dart';
 
-class BubbleTexto extends StatelessWidget {
-  final Mensagem msg;
+class BubbleImagem extends StatelessWidget {
+  final Mensagem mensagem;
   final BuildContext context;
-  BubbleTexto(this.context, this.msg);
+  final Function aoTocar;
+  // final Function feedback;
+  BubbleImagem(this.context, this.mensagem, this.aoTocar);
 
   @override
   Widget build(BuildContext context) {
@@ -17,21 +21,29 @@ class BubbleTexto extends StatelessWidget {
       elevation: 5,
       borderOnForeground: true,
       child: Container(
-        decoration: getDecoracaoBalao(),
-        margin: EdgeInsets.all(5),
-        child: Column(
-          crossAxisAlignment: getAlinhamento(),
-          children: <Widget>[
-            Text(msg.autor.getIdentificacao(), style: getEstiloAutor()),
-            Text(
-              msg.texto,
-              style: getEstiloMensagem(),
-            ),
-            SizedBox(height: 5),
-            Row(mainAxisAlignment: MainAxisAlignment.end, children: <Widget>[
-              Text(msg.horaFormatada(), style: getEstiloData())
-            ])
-          ],
+        height: Tela.y(context, 5),
+        child: IconButton(
+          icon: Icon(
+            Icons.image,
+            color: Colors.black,
+          ),
+          onPressed: () {
+            aoTocar();
+            // if (aoTocar != null) {
+            //   aoTocar();
+            // }
+            // mensagem.recursoMidia.carregar((arquivo) {
+            //   OpenFile.open(arquivo.path).then((a) {
+            //     Navigator.pushNamed(context, Paginas.EXAMES);
+            //   }).then((_) {
+            //     if (feedback != null) {
+            //       feedback();
+            //     }
+            //   });
+            // }, (erro) {
+            //   print(erro.toString());
+            // });
+          },
         ),
       ),
     );
@@ -68,8 +80,8 @@ class BubbleTexto extends StatelessWidget {
 
   double getDireita() {
     double deslocamento = Tela.x(context, 80);
-    deslocamento -= msg.texto.length * 1.5;
-    deslocamento -= msg.autor.getIdentificacao().length;
+    deslocamento -= mensagem.texto.length * 1.5;
+    deslocamento -= mensagem.autor.getIdentificacao().length;
     double x = !eMinha() ? deslocamento : Tela.x(context, 1);
     if (!eMinha()) if (x < Tela.x(context, 10)) x = Tela.x(context, 10);
     return x;
@@ -77,8 +89,8 @@ class BubbleTexto extends StatelessWidget {
 
   double getEsquerda() {
     double deslocamento = Tela.x(context, 80);
-    deslocamento -= msg.texto.length * 5;
-    deslocamento -= msg.autor.getIdentificacao().length;
+    deslocamento -= mensagem.texto.length * 5;
+    deslocamento -= mensagem.autor.getIdentificacao().length;
     if (deslocamento > Tela.x(context, 85)) deslocamento = Tela.x(context, 85);
     double x = eMinha() ? deslocamento : Tela.x(context, 1);
     if (eMinha()) if (x < Tela.x(context, 10)) x = Tela.x(context, 10);
@@ -86,7 +98,7 @@ class BubbleTexto extends StatelessWidget {
   }
 
   bool eMinha() {
-    return msg.autor.id == Usuario.logado.id;
+    return mensagem.autor.id == Usuario.logado.id;
   }
 
   Color getCor() {

@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:resident/componentes/balao_data.dart';
-import 'package:resident/componentes/balao_mensagem.dart';
 import 'package:resident/componentes/bubble.dart';
+import 'package:resident/componentes/bubble_audio.dart';
+import 'package:resident/componentes/bubble_imagem.dart';
 import 'package:resident/componentes/bubble_texto.dart';
 import 'package:resident/componentes/gravador_som.dart';
 import 'package:resident/entidades/audio.dart';
@@ -35,6 +38,143 @@ class PacientePage extends StatefulWidget {
 class _PacientePageState extends State<PacientePage> {
   int atualizacoes = 0;
   bool carregando = false;
+  Mensagem mensagemTocando;
+  double pontoAudio = 0;
+  AudioPlayer player;
+  AudioPlayerState playerState = AudioPlayerState.STOPPED;
+  int duracao = 0;
+  bool pausado = false;
+
+  List<Widget> listBaloesMensagem() {
+    List<BalaoData> baloesData = [];
+    List<Widget> widgets = [];
+    mensagens.forEach((mensagem) {
+      String dataFormatada =
+          DateFormat('dd/MM/yyyy').format(mensagem.horaCriacao);
+      var balaoData = BalaoData(mensagem.horaCriacao);
+      var widget;
+      if (mensagem.tipo == TipoMensagem.TEXTO) {
+        widget = BubbleTexto(context, mensagem);
+      } else if (mensagem.tipo == TipoMensagem.AUDIO) {
+        double _ponto = 0.0;
+        bool _tocando = false;
+        bool _pausado = false;
+        if (mensagemTocando != null && mensagemTocando.id == mensagem.id) {
+          _ponto = pontoAudio;
+          _tocando = true;
+          _pausado = pausado;
+        }
+        widget = BubbleAudio(
+            context, mensagem, _ponto, _tocando, _pausado, aoMudarPonto, () {
+          setState(() {
+            pausado = false;
+            mensagemTocando = mensagem;
+            if (!_pausado)
+              tocarAudio(mensagem.recursoMidia);
+            else
+              resumeAudio();
+          });
+        }, () {
+          if (mounted) {
+            setState(() {
+              pausado = true;
+              pausar();
+            });
+          }
+        });
+      } else if (mensagem.tipo == TipoMensagem.IMAGEM) {
+        widget = BubbleImagem(context, mensagem, () {
+          mensagem.recursoMidia.carregar((arquivo) {
+            OpenFile.open(arquivo.path).then((a) {
+              Navigator.pushNamed(context, Paginas.EXAMES);
+            }).then((_) {
+              // if (widget.feedback != null) {
+              // widget.feedback();
+              // }
+            });
+          }, (erro) {
+            print(erro.toString());
+          });
+        });
+      }
+      if (!baloesData.any((BalaoData bal) {
+        return bal.getDataFormatada() == dataFormatada;
+      })) {
+        baloesData.add(balaoData);
+        widgets.add(balaoData);
+      }
+      widgets.add(widget);
+    });
+
+    return widgets;
+  }
+
+  void pausar() {
+    player.pause();
+  }
+
+  void resumeAudio() {
+    player.seek(Duration(milliseconds: (pontoAudio * duracao).toInt()));
+    player.resume();
+  }
+
+  void tocarAudio(RecursoMidia recursoMidia) {
+    recursoMidia.carregar((arquivo) async {
+      player = new AudioPlayer();
+      player.audioPlayerStateChangeHandler = (_) {
+        if (mounted) {
+          setState(() {
+            playerState = _;
+          });
+        }
+      };
+
+      int resultado = await player.play(arquivo.path, isLocal: true);
+      if (pontoAudio > 0 &&
+          pontoAudio < 1 &&
+          playerState != AudioPlayerState.COMPLETED) {
+        player.seek(Duration(milliseconds: (pontoAudio * duracao).toInt()));
+      }
+      print('deu? $resultado');
+      if (resultado == 1) {
+        player.errorHandler = (_) {
+          print(_);
+        };
+        player.durationHandler = (_) {
+          if (duracao != _.inMilliseconds) {
+            setState(() {
+              duracao = _.inMilliseconds;
+            });
+          }
+        };
+        player.completionHandler = () {
+          setState(() {
+            resetAudio();
+          });
+        };
+        player.positionHandler = (_) {
+          setState(() {
+            if (duracao != 0)
+              pontoAudio = _.inMilliseconds / duracao;
+            else
+              pontoAudio = 0;
+          });
+        };
+      }
+    }, (_) {});
+  }
+
+  void resetAudio() {
+    setState(() {
+      pontoAudio = 0;
+      mensagemTocando = null;
+      pausado = false;
+      duracao = 0;
+    });
+  }
+
+  void aoMudarPonto(_) {}
+  void aoPausar() {}
 
   StreamSubscription streamGravacao;
   FlutterSound flutterSound = new FlutterSound();
@@ -53,8 +193,6 @@ class _PacientePageState extends State<PacientePage> {
     mensagens = Mensagem.porPaciente(Paciente.mostrado);
     ProxyFirestore.observar(Paginas.PACIENTE, () {
       if (mounted) {
-        // mensagens = List.from(mensagens);
-
         var _lista = <Mensagem>[];
         _lista.addAll(Mensagem.porPaciente(Paciente.mostrado));
         _lista.sort((m1, m2) => m1.horaCriacao.millisecondsSinceEpoch
@@ -157,43 +295,6 @@ class _PacientePageState extends State<PacientePage> {
       children: lista,
     );
     return widget;
-  }
-
-  List<Widget> listBaloesMensagem() {
-    List<BalaoData> baloesData = [];
-    List<Widget> widgets = [];
-    mensagens.forEach((mensagem) {
-      String dataFormatada =
-          DateFormat('dd/MM/yyyy').format(mensagem.horaCriacao);
-      var balaoData = BalaoData(mensagem.horaCriacao);
-      var widget;
-      if (mensagem.tipo == TipoMensagem.TEXTO) {
-        widget = BubbleTexto(context, mensagem);
-      } else {
-        widget = BalaoMensagem(
-          mensagem,
-          aoTocar: () {
-            setState(() {
-              carregando = true;
-            });
-          },
-          feedback: () {
-            setState(() {
-              carregando = false;
-            });
-          },
-        );
-      }
-      if (!baloesData.any((BalaoData bal) {
-        return bal.getDataFormatada() == dataFormatada;
-      })) {
-        baloesData.add(balaoData);
-        widgets.add(balaoData);
-      }
-      widgets.add(widget);
-    });
-
-    return widgets;
   }
 
   List<Widget> listaMensagensBubble() {

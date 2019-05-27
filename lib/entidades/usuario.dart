@@ -12,6 +12,7 @@ class Usuario {
   String email;
   String uid;
   String urlFoto;
+  String token;
   List<dynamic> contatos;
 
   static Usuario logado;
@@ -25,6 +26,7 @@ class Usuario {
     this.uid,
     this.urlFoto,
     this.contatos,
+    this.token,
   });
 
   getUrlFoto() {
@@ -66,6 +68,7 @@ class Usuario {
       'urlFoto': urlFoto,
       'idResidente': idResidente,
       'contatos': contatos,
+      'token': token,
     });
   }
 
@@ -131,13 +134,15 @@ class Usuario {
 
   static Usuario deSnap(DocumentSnapshot documento) {
     return Usuario(
-        id: documento.documentID,
-        nome: documento.data['nome'],
-        idResidente: documento.data['idResidente'],
-        telefone: documento.data['telefone'],
-        email: documento.data['email'],
-        uid: documento.data['uid'],
-        urlFoto: documento.data['urlFoto'],
-        contatos: documento.data['contatos']);
+      id: documento.documentID,
+      nome: documento.data['nome'],
+      idResidente: documento.data['idResidente'],
+      telefone: documento.data['telefone'],
+      email: documento.data['email'],
+      uid: documento.data['uid'],
+      urlFoto: documento.data['urlFoto'],
+      contatos: documento.data['contatos'],
+      token: documento.data['token'],
+    );
   }
 }
