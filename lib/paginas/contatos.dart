@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 import 'package:resident/entidades/usuario.dart';
@@ -382,7 +382,7 @@ class _ContatosPageState extends State<ContatosPage> {
           shape: BoxShape.circle,
           image: DecorationImage(
             fit: BoxFit.cover,
-            image: CachedNetworkImageProvider(contato.getUrlFoto()),
+            image: NetworkImage(contato.getUrlFoto()),
           )),
     );
   }

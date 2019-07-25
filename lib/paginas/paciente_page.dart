@@ -261,7 +261,7 @@ class _PacientePageState extends State<PacientePage> {
           children: <Widget>[
             Container(
               height: Tela.y(context, 80),
-              color: Colors.teal,
+              // color: Colors.teal,
               child: mensagensWidget(),
             ),
             barraEscrita()

@@ -1,12 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:resident/entidades/exame.dart';
-import 'package:resident/entidades/grupo.dart';
-import 'package:resident/entidades/medicamento.dart';
-import 'package:resident/entidades/mensagem.dart';
-import 'package:resident/entidades/paciente.dart';
-import 'package:resident/entidades/recurso_midia.dart';
-import 'package:resident/entidades/usuario.dart';
 import 'package:resident/paginas/contatos.dart';
 import 'package:resident/paginas/exames_page.dart';
 import 'package:resident/paginas/grupo_page_config.dart';
@@ -21,7 +14,6 @@ import 'package:resident/paginas/paciente_page.dart';
 import 'package:resident/paginas/pacientes_page.dart';
 import 'package:resident/paginas/pagina_inicial.dart';
 import 'package:resident/paginas/perfil_page.dart';
-import 'package:resident/teste.dart';
 import 'package:resident/utils/cores.dart';
 import 'package:resident/utils/download_upload.dart';
 import 'package:resident/utils/paginas.dart';
@@ -49,7 +41,8 @@ class MyApp extends StatelessWidget {
           buttonColor: Colors.tealAccent,
         ),
 
-        scaffoldBackgroundColor: /*Color(Cores.CARD_BACKGROUND)*/ Colors.teal,
+        scaffoldBackgroundColor: /*Color(Cores.CARD_BACKGROUND)*/ Colors
+            .teal[50],
 //        cardColor: Color(Cores.CARD_BACKGROUND),
       ),
       home: PaginaInicial(),

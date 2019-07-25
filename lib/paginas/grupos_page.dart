@@ -162,8 +162,11 @@ class _GruposPageState extends State<GruposPage> {
     );
     Widget configuracoesGrupo = RaisedButton(
       shape: CircleBorder(),
-      color: Colors.white,
-      child: Icon(Icons.build),
+      color: Color(0xFF3d5f52),
+      child: Icon(
+        Icons.build,
+        color: Colors.teal[50],
+      ),
       onPressed: () {
         Grupo.mostrado = grupo;
         Navigator.pushNamed(context, Paginas.GRUPO_CONFIG);

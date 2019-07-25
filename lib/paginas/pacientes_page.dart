@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/entidades/grupo.dart';
@@ -91,8 +91,9 @@ class _PacientesPageState extends State<PacientesPage> {
 
   dynamic getFoto(Paciente paciente) {
     var foto = paciente.getUrlFoto() != null
-        ? CachedNetworkImageProvider(paciente.getUrlFoto(),
-            errorListener: () {})
+        ? NetworkImage(paciente.getUrlFoto())
+        // ? CachedNetworkImageProvider(paciente.getUrlFoto(),
+        //     errorListener: () {})
         : null;
     return foto;
   }
