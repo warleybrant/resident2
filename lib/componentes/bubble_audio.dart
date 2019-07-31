@@ -13,8 +13,8 @@ class BubbleAudio extends StatelessWidget {
   final Function aoTocar;
   final Function aoPausar;
 
-  BubbleAudio(this.context, this.mensagem, this.pontoAudio, this.tocando, this.pausado,
-      this.aoMudarPonto, this.aoTocar, this.aoPausar);
+  BubbleAudio(this.context, this.mensagem, this.pontoAudio, this.tocando,
+      this.pausado, this.aoMudarPonto, this.aoTocar, this.aoPausar);
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +38,7 @@ class BubbleAudio extends StatelessWidget {
       borderOnForeground: true,
       child: Container(
         decoration: getDecoracaoBalao(),
-        margin: EdgeInsets.all(5),
+        margin: EdgeInsets.all(1),
         child: Column(
           crossAxisAlignment: getAlinhamento(),
           mainAxisSize: MainAxisSize.min,

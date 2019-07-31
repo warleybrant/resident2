@@ -379,11 +379,12 @@ class _ContatosPageState extends State<ContatosPage> {
       width: 50,
       height: 50,
       decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          image: DecorationImage(
-            fit: BoxFit.cover,
-            image: NetworkImage(contato.getUrlFoto()),
-          )),
+        shape: BoxShape.circle,
+        image: DecorationImage(
+          fit: BoxFit.cover,
+          image: NetworkImage(contato.getUrlFoto()),
+        ),
+      ),
     );
   }
 

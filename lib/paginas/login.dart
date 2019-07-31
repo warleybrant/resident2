@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 import 'package:resident/entidades/usuario.dart';
-import 'package:resident/main.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,6 +77,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget getScaffold() {
     return Scaffold(
+      backgroundColor: Colors.teal,
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
         child: listaContatosWidgets(),

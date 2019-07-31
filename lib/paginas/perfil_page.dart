@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:resident/componentes/avatar_alteravel.dart';
 import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/entidades/usuario.dart';

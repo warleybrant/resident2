@@ -50,7 +50,12 @@ class _GravadorState extends State<Gravador> {
       default:
     }
 
-    return IconButton(icon: Icon(icone), onPressed: evento);
+    return IconButton(
+        icon: Icon(
+          icone,
+          color: Colors.black,
+        ),
+        onPressed: evento);
   }
 
   void iniciarGravacao() {

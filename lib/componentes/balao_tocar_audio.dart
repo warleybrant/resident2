@@ -56,16 +56,29 @@ class _BalaoTocarAudioState extends State<BalaoTocarAudio> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-          getEsquerda(), getTopo(), getDireita(), getFundo()),
-      child: Container(
-        // key: widget.chaveUnica,
-        decoration: ShapeDecoration(color: getCor(), shape: StadiumBorder()),
-        child: getConteudo(),
-      ),
+    return Row(
+      children: <Widget>[
+        Container(
+          // key: widget.chaveUnica,
+          decoration: ShapeDecoration(color: getCor(), shape: StadiumBorder()),
+          child: getConteudo(),
+        )
+      ],
     );
   }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return Padding(
+  //     padding: EdgeInsets.fromLTRB(
+  //         getEsquerda(), getTopo(), getDireita(), getFundo()),
+  //     child: Container(
+  //       // key: widget.chaveUnica,
+  //       decoration: ShapeDecoration(color: getCor(), shape: StadiumBorder()),
+  //       child: getConteudo(),
+  //     ),
+  //   );
+  // }
 
   getConteudo() {
     if (falhaAoCarregar) {
