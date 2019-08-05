@@ -170,25 +170,29 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _testVerifyPhoneNumber() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     final PhoneVerificationCompleted verificationCompleted =
-        (FirebaseUser user) {
-      if (carregando) {
-        Usuario usuario = Usuario.buscaPorId(user.uid);
-        if (usuario == null) {
-          usuario = new Usuario(
-              id: user.uid,
-              nome: '',
-              uid: user.uid,
-              telefone: telefoneFormatado(),
-              urlFoto: null,
-              idResidente: telefoneFormatado(),
-              contatos: []);
-          usuario.salvar();
+        (AuthCredential authCredential) {
+      print('##### $authCredential #####');
+      _auth.signInWithCredential(authCredential).then((_) {
+        FirebaseUser user = _.user;
+        if (carregando) {
+          Usuario usuario = Usuario.buscaPorId(user.uid);
+          if (usuario == null) {
+            usuario = new Usuario(
+                id: user.uid,
+                nome: '',
+                uid: user.uid,
+                telefone: telefoneFormatado(),
+                urlFoto: null,
+                idResidente: telefoneFormatado(),
+                contatos: []);
+            usuario.salvar();
+          }
+          Usuario.logado = usuario;
+          prefs.setString('usuarioLogado', user.uid);
+          Navigator.pushNamedAndRemoveUntil(
+              context, Paginas.INICIAL, (r) => false);
         }
-        Usuario.logado = usuario;
-        prefs.setString('usuarioLogado', user.uid);
-        Navigator.pushNamedAndRemoveUntil(
-            context, Paginas.INICIAL, (r) => false);
-      }
+      });
     };
 
     final PhoneVerificationFailed verificationFailed =
@@ -238,12 +242,13 @@ class _LoginPageState extends State<LoginPage> {
       carregando = true;
     });
     await _auth.verifyPhoneNumber(
-        phoneNumber: telefoneFormatado(),
-        timeout: const Duration(seconds: 5),
-        verificationCompleted: verificationCompleted,
-        verificationFailed: verificationFailed,
-        codeSent: codeSent,
-        codeAutoRetrievalTimeout: codeAutoRetrievalTimeout);
+      phoneNumber: telefoneFormatado(),
+      timeout: const Duration(seconds: 5),
+      verificationCompleted: verificationCompleted,
+      verificationFailed: verificationFailed,
+      codeSent: codeSent,
+      codeAutoRetrievalTimeout: codeAutoRetrievalTimeout,
+    );
   }
 
   void detectaEmulador() {
