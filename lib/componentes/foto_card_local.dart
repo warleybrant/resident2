@@ -1,18 +1,19 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 // import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class FotoCardLocal extends StatelessWidget {
-  final File arquivo;
+  final Uint8List bytes;
   final double width;
   final double height;
 
-  FotoCardLocal(this.arquivo, this.width, this.height);
+  FotoCardLocal(this.bytes, this.width, this.height);
 
   @override
   Widget build(BuildContext context) {
-    var foto = arquivo != null ? Image.file(arquivo) : null;
+    var foto = bytes != null ? Image.memory(bytes) : null;
 
     Widget fotoWidget = foto != null
         ? SizedBox(

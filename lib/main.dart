@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:resident/paginas/contatos.dart';
@@ -16,20 +18,20 @@ import 'package:resident/paginas/pagina_inicial.dart';
 import 'package:resident/paginas/perfil_page.dart';
 import 'package:resident/utils/cores.dart';
 import 'package:resident/utils/download_upload.dart';
+import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
 
 Future<void> main() async {
-  Firestore.instance.settings(persistenceEnabled: true);
-  DownloadUpload.carregarPaths().then((_) {
-    runApp(MyApp());
-  });
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    DownloadUpload.carregarPaths().then((_) {});
+    Firestore.instance.settings(persistenceEnabled: false);
+    Ferramentas.init();
     final ThemeData base = ThemeData.light();
-    Firestore.instance.settings(persistenceEnabled: true);
     return MaterialApp(
       title: 'Residente',
       theme: ThemeData(

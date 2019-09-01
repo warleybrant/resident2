@@ -1,6 +1,9 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/exibe_imagem.dart';
-import 'package:resident/componentes/foto_card.dart';
+import 'package:resident/componentes/photocard.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/cores.dart';
@@ -21,6 +24,8 @@ class _GruposPageState extends State<GruposPage> {
   int atualizacoes = 0;
   List<Grupo> grupos = [];
   String urlFotoMostrando;
+  // File _arquivoFotoMostrando;
+  Uint8List _bytesFotoMostrar;
 
   @override
   void initState() {
@@ -106,22 +111,26 @@ class _GruposPageState extends State<GruposPage> {
   getCorpo() {
     var _lista = <Widget>[listaGrupos()];
 
-    if (urlFotoMostrando != null) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          urlFotoMostrando = null;
-        });
-      }));
+    if (_bytesFotoMostrar != null) {
+      _lista.add(Opacity(
+        opacity: 0.4,
+        child: Container(
+          color: Colors.black,
+        ),
+      ));
       _lista.add(ExibeImagem(
-        url: urlFotoMostrando,
+        bytes: _bytesFotoMostrar,
         aoTocar: () {
           setState(() {
-            urlFotoMostrando = null;
+            _bytesFotoMostrar = null;
           });
         },
       ));
     }
-    return Stack(children: _lista);
+
+    return Stack(
+      children: _lista,
+    );
   }
 
   Widget listaGrupos() {
@@ -145,9 +154,21 @@ class _GruposPageState extends State<GruposPage> {
 
   Widget cardGrupo(Grupo grupo) {
     var fotoGrupo = InkWell(
-      child: FotoCard(grupo.getUrlFoto(), 80, 80),
+      child: PhotoCard(
+        url: grupo.getUrlFoto(),
+        largura: 80,
+        altura: 80,
+        aoExibir: (bytes) {
+          if (mounted) {
+            setState(() {
+              _bytesFotoMostrar = bytes;
+            });
+          }
+        },
+      ),
       onTap: () {
         setState(() {
+          _bytesFotoMostrar = null;
           urlFotoMostrando = grupo.getUrlFoto();
         });
       },
@@ -193,12 +214,13 @@ class _GruposPageState extends State<GruposPage> {
   Widget getDrawerHeader() {
     return UserAccountsDrawerHeader(
       accountName: Text(Usuario.logado.getIdentificacao()),
-      currentAccountPicture: InkWell(
-        child: FotoCard(Usuario.logado.getUrlFoto(), Tela.x(context, 10),
-            Tela.y(context, 10)),
-        onTap: () {
+      currentAccountPicture: PhotoCard(
+        url: Usuario.logado.getUrlFoto(),
+        largura: Tela.x(context, 10),
+        altura: Tela.y(context, 10),
+        aoExibir: (bytes) {
           setState(() {
-            urlFotoMostrando = Usuario.logado.getUrlFoto();
+            _bytesFotoMostrar = bytes;
           });
           Navigator.pop(context);
         },

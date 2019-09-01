@@ -175,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
       _auth.signInWithCredential(authCredential).then((_) {
         FirebaseUser user = _.user;
         if (carregando) {
-          Usuario usuario = Usuario.buscaPorId(user.uid);
+          Usuario usuario = Usuario.buscaPorTelefone(user.phoneNumber);
           if (usuario == null) {
             usuario = new Usuario(
                 id: user.uid,

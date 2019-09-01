@@ -30,8 +30,8 @@ class Usuario {
   });
 
   getUrlFoto() {
-    if (urlFoto == null) return Padroes.FOTO_USUARIO_URL;
-    return urlFoto;
+    if (urlFoto == null) return 'padroes/usuario_padrao.png';
+    return 'fotos_capa/usuarios/$id.png';
   }
 
   static Usuario buscaPorId(String id) {

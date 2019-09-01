@@ -1,9 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
+import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/padroes.dart';
 import 'package:resident/utils/proxy_storage.dart';
 
@@ -22,7 +24,7 @@ class Grupo {
   }
 
   void salvar(
-      {File fotoParaUpload,
+      {Uint8List bytesFoto,
       Function aoSalvarFotoNoServidor,
       Function(double) progresso}) async {
     if (id == null) {
@@ -30,21 +32,32 @@ class Grupo {
     } else {
       _alterar();
     }
-    if (fotoParaUpload != null) {
-      ProxyStorage.uploadArquivo(
-        fotoParaUpload,
+    if (bytesFoto != null) {
+      Ferramentas.salvarArquivoAsync(
         'fotos_capa/grupos/$id.png',
-        progresso: progresso,
-        aoSubir: (r) {
-          var ref =
-              FirebaseStorage.instance.ref().child('fotos_capa/grupos/$id.png');
-          ref.getDownloadURL().then((_) {
-            this.urlFoto = _;
-            this.salvar();
-            aoSalvarFotoNoServidor();
-          });
+        (ref, url, arquivo) {
+          this.urlFoto = url;
+          this.salvar();
+          aoSalvarFotoNoServidor();
         },
+        bytes: bytesFoto,
+        percentual: progresso,
       );
+
+      // ProxyStorage.uploadArquivo(
+      //   fotoParaUpload,
+      //   'fotos_capa/grupos/$id.png',
+      //   progresso: progresso,
+      //   aoSubir: (r) {
+      //     var ref =
+      //         FirebaseStorage.instance.ref().child('fotos_capa/grupos/$id.png');
+      //     ref.getDownloadURL().then((_) {
+      //       this.urlFoto = _;
+      //       this.salvar();
+      //       aoSalvarFotoNoServidor();
+      //     });
+      //   },
+      // );
     }
   }
 
@@ -61,8 +74,8 @@ class Grupo {
   }
 
   String getUrlFoto() {
-    if (urlFoto == null) return Padroes.FOTO_GRUPO_URL;
-    return urlFoto;
+    if (urlFoto == null) return 'padroes/grupo_padrao.png';
+    return 'fotos_capa/grupos/$id.png';
   }
 
   static List<dynamic> todosIds() {

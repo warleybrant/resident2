@@ -1,19 +1,20 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:resident/utils/tela.dart';
 
 class ExibeImagem extends StatelessWidget {
   final String url;
-  final File arquivo;
+  final Uint8List bytes;
   final Function aoTocar;
 
-  ExibeImagem({this.url, this.arquivo, this.aoTocar});
+  ExibeImagem({this.url, this.bytes, this.aoTocar});
 
   @override
   Widget build(BuildContext context) {
-    var foto = arquivo != null
-        ? Image.file(
-            arquivo,
+    var foto = bytes != null
+        ? Image.memory(
+            bytes,
             width: Tela.x(context, 100),
             height: Tela.y(context, 100),
           )

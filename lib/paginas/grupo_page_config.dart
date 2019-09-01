@@ -1,13 +1,13 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/avatar_alteravel.dart';
 import 'package:resident/componentes/exibe_imagem.dart';
-import 'package:resident/componentes/foto_card.dart';
+import 'package:resident/componentes/photocard.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/cores.dart';
-import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 
@@ -23,12 +23,12 @@ class _GrupoPageState extends State<GrupoPage> {
   Grupo grupo;
   bool carregando = false;
   bool salvandoImagem = false;
-  File arquivoImagem;
+  Uint8List _bytesArquivoFoto;
   double progressoUpload = 0;
   List contatosSelecionados;
   final _formKey = GlobalKey<FormState>();
   String urlFotoMostrando;
-  File arquivoMostrando;
+  Uint8List _bytesFotoMostrar;
 
   @override
   void initState() {
@@ -188,41 +188,18 @@ class _GrupoPageState extends State<GrupoPage> {
       children: <Widget>[form()],
     ));
 
-    if (carregando) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          carregando = false;
-        });
-      }, porcentagem: progressoUpload / 100));
-    }
-
-    if (urlFotoMostrando != null) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          urlFotoMostrando = null;
-        });
-      }));
-      _lista.add(ExibeImagem(
-        url: urlFotoMostrando,
-        aoTocar: () {
-          setState(() {
-            urlFotoMostrando = null;
-          });
-        },
+    if (_bytesFotoMostrar != null) {
+      _lista.add(Opacity(
+        opacity: 0.4,
+        child: Container(
+          color: Colors.black,
+        ),
       ));
-    }
-
-    if (arquivoMostrando != null) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          arquivoMostrando = null;
-        });
-      }));
       _lista.add(ExibeImagem(
-        arquivo: arquivoMostrando,
+        bytes: _bytesFotoMostrar,
         aoTocar: () {
           setState(() {
-            arquivoMostrando = null;
+            _bytesFotoMostrar = null;
           });
         },
       ));
@@ -255,9 +232,9 @@ class _GrupoPageState extends State<GrupoPage> {
           child: fotoGrupo(),
           onTap: () {
             setState(() {
-              if (arquivoImagem != null) {
+              if (_bytesFotoMostrar != null) {
                 setState(() {
-                  arquivoMostrando = arquivoImagem;
+                  _bytesFotoMostrar = _bytesArquivoFoto;
                 });
               } else {
                 setState(() {
@@ -281,12 +258,12 @@ class _GrupoPageState extends State<GrupoPage> {
       Tela.x(context, 40),
       Tela.x(context, 40),
       Grupo.mostrado.getUrlFoto(),
-      arquivoImagem,
+      _bytesArquivoFoto,
       aoSelecionarImagem: (File arquivoSelecionado) {
         if (mounted) {
           setState(() {
             if (arquivoSelecionado != null) {
-              arquivoImagem = arquivoSelecionado;
+              _bytesArquivoFoto = arquivoSelecionado.readAsBytesSync();
               salvandoImagem = true;
             }
             carregando = false;
@@ -366,7 +343,10 @@ class _GrupoPageState extends State<GrupoPage> {
           mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            FotoCard(contato.urlFoto, Tela.x(context, 10), Tela.x(context, 10)),
+            PhotoCard(
+                url: contato.getUrlFoto(),
+                largura: Tela.x(context, 10),
+                altura: Tela.x(context, 10)),
             SizedBox(
               width: Tela.x(context, 1),
             ),
@@ -402,7 +382,7 @@ class _GrupoPageState extends State<GrupoPage> {
         contatosSelecionados.add(Usuario.logado.id);
       Grupo.mostrado.setContatosPelosIds(contatosSelecionados);
       Grupo.mostrado.salvar(
-          fotoParaUpload: arquivoImagem,
+          bytesFoto: _bytesArquivoFoto,
           progresso: (_) {
             if (mounted) {
               setState(() {
@@ -422,7 +402,7 @@ class _GrupoPageState extends State<GrupoPage> {
       setState(() {
         carregando = true;
       });
-      if (arquivoImagem == null) {
+      if (_bytesArquivoFoto == null) {
         FocusScope.of(context).requestFocus(new FocusNode());
         voltar();
       }

@@ -1,14 +1,12 @@
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:resident/componentes/avatar_alteravel.dart';
 import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
-import 'package:resident/utils/proxy_storage.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
 
@@ -25,16 +23,20 @@ class _PerfilPageState extends State<PerfilPage> {
   final _formKey = GlobalKey<FormState>();
   bool carregando = false;
   bool salvandoImagem = false;
-  File arquivoImagem;
+  Uint8List _bytesFotoSelecionada;
   double progressoUpload = 0;
   String urlFotoMostrando;
-  File arquivoMostrando;
+  Uint8List _bytesFotoMostrar;
 
   @override
   void initState() {
     nomeController.text = Usuario.logado.nome;
     emailController.text = Usuario.logado.email;
     telefoneController.text = Usuario.logado.telefone;
+    _bytesFotoSelecionada =
+        Ferramentas.carregaArquivoAsync(Usuario.logado.getUrlFoto(), (bytes) {
+      _bytesFotoSelecionada = bytes;
+    });
     super.initState();
   }
 
@@ -76,39 +78,26 @@ class _PerfilPageState extends State<PerfilPage> {
 
     if (carregando) {
       _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          carregando = false;
-        });
-      }, porcentagem: progressoUpload / 100));
-    }
-
-    if (urlFotoMostrando != null) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          urlFotoMostrando = null;
-        });
-      }));
-      _lista.add(ExibeImagem(
-        url: urlFotoMostrando,
-        aoTocar: () {
+        if (mounted) {
           setState(() {
-            urlFotoMostrando = null;
+            carregando = false;
           });
-        },
-      ));
+        }
+      }));
     }
 
-    if (arquivoMostrando != null) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          arquivoMostrando = null;
-        });
-      }));
+    if (_bytesFotoMostrar != null) {
+      _lista.add(Opacity(
+        opacity: 0.4,
+        child: Container(
+          color: Colors.black,
+        ),
+      ));
       _lista.add(ExibeImagem(
-        arquivo: arquivoMostrando,
+        bytes: _bytesFotoMostrar,
         aoTocar: () {
           setState(() {
-            arquivoMostrando = null;
+            _bytesFotoMostrar = null;
           });
         },
       ));
@@ -136,11 +125,18 @@ class _PerfilPageState extends State<PerfilPage> {
       Tela.x(context, 40),
       Tela.x(context, 40),
       Usuario.logado.getUrlFoto(),
-      arquivoImagem,
+      _bytesFotoSelecionada,
+      aoTocarImagem: (bytesImagem) {
+        if (mounted) {
+          setState(() {
+            _bytesFotoMostrar = bytesImagem;
+          });
+        }
+      },
       aoSelecionarImagem: (File arquivoSelecionado) {
         setState(() {
           if (arquivoSelecionado != null) {
-            arquivoImagem = arquivoSelecionado;
+            _bytesFotoSelecionada = arquivoSelecionado.readAsBytesSync();
             salvandoImagem = true;
           }
           carregando = false;
@@ -160,7 +156,7 @@ class _PerfilPageState extends State<PerfilPage> {
       onPressed: () {
         if (_formKey.currentState.validate()) {
           salvar();
-          if (arquivoImagem == null) {
+          if (_bytesFotoSelecionada == null) {
             voltar();
           }
         }
@@ -178,9 +174,9 @@ class _PerfilPageState extends State<PerfilPage> {
           child: fotoUsuario(),
           onTap: () {
             setState(() {
-              if (arquivoImagem != null) {
+              if (_bytesFotoSelecionada != null) {
                 setState(() {
-                  arquivoMostrando = arquivoImagem;
+                  _bytesFotoMostrar = _bytesFotoSelecionada;
                 });
               } else {
                 setState(() {
@@ -284,33 +280,30 @@ class _PerfilPageState extends State<PerfilPage> {
       Usuario.logado.nome = nomeController.text;
       Usuario.logado.email = emailController.text;
       Usuario.logado.salvar();
-      if (arquivoImagem != null) {
+      if (_bytesFotoSelecionada != null) {
         setState(() {
           carregando = true;
         });
         String caminhoNoServidor =
             'fotos_capa/usuarios/${Usuario.logado.id}.png';
-        ProxyStorage.uploadArquivo(
-          arquivoImagem,
+        Ferramentas.salvarArquivoAsync(
           caminhoNoServidor,
-          progresso: (_) {
+          (ref, url, f) {
+            Usuario.logado.urlFoto = url;
+            Usuario.logado.salvar();
+            if (mounted) {
+              setState(() {
+                carregando = false;
+              });
+            }
+            voltar();
+          },
+          percentual: (i) {
             setState(() {
-              progressoUpload = _;
+              progressoUpload = i;
             });
           },
-          aoSubir: (r) {
-            var ref = FirebaseStorage.instance.ref().child(caminhoNoServidor);
-            ref.getDownloadURL().then((_) {
-              Usuario.logado.urlFoto = _;
-              Usuario.logado.salvar();
-              if (mounted) {
-                setState(() {
-                  carregando = false;
-                });
-              }
-              voltar();
-            });
-          },
+          bytes: _bytesFotoSelecionada,
         );
       }
     }

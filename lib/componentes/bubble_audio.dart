@@ -19,20 +19,31 @@ class BubbleAudio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return corpo();
-    // return Container(
-    //   child: Slider(
-    //     value: pontoAudio,
-    //     onChanged: (_) {
-    //       aoMudarPonto(_);
-    //     },
-    //   ),
-    // );
   }
 
   corpo() {
+    List<Widget> lista = !eMinha()
+        ? <Widget>[
+            cardPrincipal(),
+            Expanded(
+              child: Container(),
+            )
+          ]
+        : <Widget>[
+            Expanded(
+              child: Container(),
+            ),
+            cardPrincipal(),
+          ];
+    return Row(
+      children: lista,
+    );
+  }
+
+  cardPrincipal() {
     return Card(
       key: UniqueKey(),
-      margin: getMargem(),
+      // margin: getMargem(),
       color: getCor(),
       elevation: 5,
       borderOnForeground: true,

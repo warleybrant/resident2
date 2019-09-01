@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -75,7 +76,7 @@ class Paciente {
   }
 
   void salvar(
-      {File fotoParaUpload,
+      {Uint8List bytesFoto,
       Function aoSalvarFotoNoServidor,
       Function(double) progresso}) {
     if (id == null) {
@@ -85,22 +86,28 @@ class Paciente {
       _alterar();
     }
 
-    if (fotoParaUpload != null) {
-      ProxyStorage.uploadArquivo(
-        fotoParaUpload,
-        'fotos_capa/pacientes/$id.png',
-        progresso: progresso,
-        aoSubir: (r) {
-          var ref = FirebaseStorage.instance
-              .ref()
-              .child('fotos_capa/pacientes/$id.png');
-          ref.getDownloadURL().then((_) {
-            this.urlFoto = _;
-            this.salvar();
-            aoSalvarFotoNoServidor();
-          });
-        },
-      );
+    if (bytesFoto != null) {
+      Ferramentas.salvarArquivoAsync('fotos_capa/pacientes/$id.png',
+          (ref, url, f) {
+        this.urlFoto = url;
+        this.salvar();
+        aoSalvarFotoNoServidor();
+      }, bytes: bytesFoto, percentual: progresso);
+      // ProxyStorage.uploadArquivo(
+      //   fotoParaUpload,
+      //   'fotos_capa/pacientes/$id.png',
+      //   progresso: progresso,
+      //   aoSubir: (r) {
+      //     var ref = FirebaseStorage.instance
+      //         .ref()
+      //         .child('fotos_capa/pacientes/$id.png');
+      //     ref.getDownloadURL().then((_) {
+      //       this.urlFoto = _;
+      //       this.salvar();
+      //       aoSalvarFotoNoServidor();
+      //     });
+      //   },
+      // );
     }
   }
 

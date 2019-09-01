@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/avatar_alteravel.dart';
@@ -24,11 +25,11 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
       MaskedTextController(text: '', mask: '00/00/2000');
   final _formKey = GlobalKey<FormState>();
   String urlFotoMostrando;
-  File arquivoMostrando;
+  Uint8List _bytesFotoMostrar;
 
   bool carregando = false;
   bool salvandoImagem = false;
-  File arquivoImagem;
+  Uint8List _bytesArquivoFoto;
   double progressoUpload = 0;
 
   @override
@@ -87,11 +88,11 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
       Tela.x(context, 40),
       Tela.x(context, 40),
       Paciente.mostrado.getUrlFoto(),
-      arquivoImagem,
+      _bytesArquivoFoto,
       aoSelecionarImagem: (File arquivoSelecionado) {
         if (arquivoSelecionado != null) {
           setState(() {
-            arquivoImagem = arquivoSelecionado;
+            _bytesArquivoFoto = arquivoSelecionado.readAsBytesSync();
             salvandoImagem = true;
             carregando = false;
           });
@@ -191,17 +192,17 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
       ));
     }
 
-    if (arquivoMostrando != null) {
+    if (_bytesFotoMostrar != null) {
       _lista.add(Ferramentas.barreiraModal(() {
         setState(() {
-          arquivoMostrando = null;
+          _bytesFotoMostrar = null;
         });
       }));
       _lista.add(ExibeImagem(
-        arquivo: arquivoMostrando,
+        bytes: _bytesArquivoFoto,
         aoTocar: () {
           setState(() {
-            arquivoMostrando = null;
+            _bytesFotoMostrar = null;
           });
         },
       ));
@@ -234,9 +235,9 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
           child: fotoPaciente(),
           onTap: () {
             setState(() {
-              if (arquivoImagem != null) {
+              if (_bytesArquivoFoto != null) {
                 setState(() {
-                  arquivoMostrando = arquivoImagem;
+                  _bytesFotoMostrar = _bytesArquivoFoto;
                 });
               } else {
                 setState(() {
@@ -325,7 +326,7 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
           Paciente.mostrado.grupo = Grupo.mostrado;
 
           Paciente.mostrado.salvar(
-              fotoParaUpload: arquivoImagem,
+              bytesFoto: _bytesFotoMostrar,
               progresso: (_) {
                 if (mounted) {
                   setState(() {
@@ -344,7 +345,7 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
           setState(() {
             carregando = true;
           });
-          if (arquivoImagem == null) voltar();
+          if (_bytesFotoMostrar == null) voltar();
         }
       },
     );
