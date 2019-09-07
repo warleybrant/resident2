@@ -45,6 +45,49 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
 
   @override
   Widget build(BuildContext context) {
+    return montaPagina();
+  }
+
+  Widget montaPagina() {
+    if (carregando) {
+      return Stack(
+        children: <Widget>[
+          getScaffold(),
+          Opacity(
+            opacity: 0.7,
+            child: Container(
+              color: Colors.black,
+            ),
+          ),
+          getIndicadorProgresso()
+        ],
+      );
+    }
+    return getScaffold();
+  }
+
+  Widget getIndicadorProgresso() {
+    return Center(
+      child: Card(
+        child: Container(
+          width: Tela.x(context, 20),
+          height: Tela.y(context, 10),
+          child: InkWell(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+            onTap: () {
+              setState(() {
+                carregando = false;
+              });
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget getScaffold() {
     return Scaffold(
       appBar: getAppBar(),
       body: getCorpo(),
@@ -168,38 +211,15 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
       children: <Widget>[form()],
     ));
 
-    if (carregando) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          carregando = false;
-        });
-      }, porcentagem: progressoUpload / 100));
-    }
-
-    if (urlFotoMostrando != null) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          urlFotoMostrando = null;
-        });
-      }));
-      _lista.add(ExibeImagem(
-        url: urlFotoMostrando,
-        aoTocar: () {
-          setState(() {
-            urlFotoMostrando = null;
-          });
-        },
-      ));
-    }
-
     if (_bytesFotoMostrar != null) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          _bytesFotoMostrar = null;
-        });
-      }));
+      _lista.add(Opacity(
+        opacity: 0.4,
+        child: Container(
+          color: Colors.black,
+        ),
+      ));
       _lista.add(ExibeImagem(
-        bytes: _bytesArquivoFoto,
+        bytes: _bytesFotoMostrar,
         aoTocar: () {
           setState(() {
             _bytesFotoMostrar = null;
@@ -326,7 +346,7 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
           Paciente.mostrado.grupo = Grupo.mostrado;
 
           Paciente.mostrado.salvar(
-              bytesFoto: _bytesFotoMostrar,
+              bytesFoto: _bytesArquivoFoto,
               progresso: (_) {
                 if (mounted) {
                   setState(() {
@@ -338,14 +358,14 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
                 if (mounted) {
                   setState(() {
                     salvandoImagem = false;
+                    voltar();
                   });
-                  voltar();
                 }
               });
           setState(() {
             carregando = true;
           });
-          if (_bytesFotoMostrar == null) voltar();
+          if (_bytesArquivoFoto == null) voltar();
         }
       },
     );

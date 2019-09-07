@@ -405,13 +405,13 @@ class _ExamesPageState extends State<ExamesPage> {
         color: Colors.black,
       ),
       onPressed: () {
+        setState(() {
+          carregando = true;
+        });
         recurso.carregar((arquivo) {
-          setState(() {
-            carregando = true;
-            OpenFile.open(arquivo.path).then((_) {
-              setState(() {
-                carregando = false;
-              });
+          OpenFile.open(arquivo.path).then((_) {
+            setState(() {
+              carregando = false;
             });
           });
         }, (erro) {

@@ -1,13 +1,9 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/ferramentas.dart';
-import 'package:resident/utils/padroes.dart';
-import 'package:resident/utils/proxy_storage.dart';
 
 class Grupo {
   static Grupo mostrado;
@@ -35,7 +31,7 @@ class Grupo {
     if (bytesFoto != null) {
       Ferramentas.salvarArquivoAsync(
         'fotos_capa/grupos/$id.png',
-        (ref, url, arquivo) {
+        aoUpload: (ref, url, arquivo) {
           this.urlFoto = url;
           this.salvar();
           aoSalvarFotoNoServidor();

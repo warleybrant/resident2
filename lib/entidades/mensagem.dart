@@ -68,6 +68,8 @@ class Mensagem {
   static List<Mensagem> porPaciente(Paciente paciente) {
     List<Mensagem> msgs = [];
     msgs.addAll(listagem[paciente.id]);
+    msgs.sort((m1, m2) => m1.horaCriacao.millisecondsSinceEpoch
+        .compareTo(m2.horaCriacao.millisecondsSinceEpoch));
     return msgs;
   }
 

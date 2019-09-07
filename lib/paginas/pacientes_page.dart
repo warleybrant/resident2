@@ -1,6 +1,9 @@
 // import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/exibe_imagem.dart';
+import 'package:resident/componentes/photocard.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
 import 'package:resident/utils/ferramentas.dart';
@@ -18,6 +21,7 @@ class _PacientesPageState extends State<PacientesPage> {
   int atualizacoes = 0;
   List<Paciente> pacientes = [];
   String urlFotoMostrando;
+  Uint8List _bytesFotoMostrar;
 
   @override
   void initState() {
@@ -51,25 +55,26 @@ class _PacientesPageState extends State<PacientesPage> {
                   context, (r) => r.settings.name == Paginas.GRUPOS);
             }),
       ),
-      body: corpo(),
+      body: getCorpo(),
       floatingActionButton: btnAddPaciente(),
     );
   }
 
-  Widget corpo() {
+  Widget getCorpo() {
     var _lista = <Widget>[listaPacientes()];
 
-    if (urlFotoMostrando != null) {
-      _lista.add(Ferramentas.barreiraModal(() {
-        setState(() {
-          urlFotoMostrando = null;
-        });
-      }));
+    if (_bytesFotoMostrar != null) {
+      _lista.add(Opacity(
+        opacity: 0.4,
+        child: Container(
+          color: Colors.black,
+        ),
+      ));
       _lista.add(ExibeImagem(
-        url: urlFotoMostrando,
+        bytes: _bytesFotoMostrar,
         aoTocar: () {
           setState(() {
-            urlFotoMostrando = null;
+            _bytesFotoMostrar = null;
           });
         },
       ));
@@ -99,35 +104,28 @@ class _PacientesPageState extends State<PacientesPage> {
   }
 
   Widget cardPaciente(Paciente paciente) {
-    var foto = getFoto(paciente);
-
-    Widget fotoGrupo = foto != null
-        ? Container(
-            width: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              image: DecorationImage(
-                fit: BoxFit.fill,
-                image: foto,
-              ),
-            ),
-          )
-        : SizedBox(
-            width: 80,
-            child: CircleAvatar(
-              child: Icon(Icons.add_a_photo),
-            ),
-          );
-
-    fotoGrupo = InkWell(
-      child: fotoGrupo,
+    var fotoPaciente = InkWell(
+      child: PhotoCard(
+        url: paciente.getUrlFoto(),
+        largura: 80,
+        altura: 80,
+        aoExibir: (bytes) {
+          if (mounted) {
+            setState(() {
+              _bytesFotoMostrar = bytes;
+            });
+          }
+        },
+      ),
       onTap: () {
         setState(() {
+          _bytesFotoMostrar = null;
           urlFotoMostrando = paciente.getUrlFoto();
         });
       },
     );
-    Widget textoGrupo = Expanded(
+
+    Widget textoPaciente = Expanded(
       child: MaterialButton(
           child: Text(paciente.nome),
           onPressed: () {
@@ -135,16 +133,19 @@ class _PacientesPageState extends State<PacientesPage> {
             Navigator.pushNamed(context, Paginas.PACIENTE);
           }),
     );
-    Widget configuracoesGrupo = RaisedButton(
+    Widget configuracoesPaciente = RaisedButton(
       shape: CircleBorder(),
-      color: Colors.white,
-      child: Icon(Icons.build),
+      color: Color(0xFF3d5f52),
+      child: Icon(
+        Icons.build,
+        color: Colors.teal[50],
+      ),
       onPressed: () {
         Paciente.mostrado = paciente;
         Navigator.pushNamed(context, Paginas.PACIENTE_CONFIG);
       },
     );
-    List<Widget> lista = [fotoGrupo, textoGrupo, configuracoesGrupo];
+    List<Widget> lista = [fotoPaciente, textoPaciente, configuracoesPaciente];
     return Card(
       key: Key(paciente.id),
       elevation: 5,

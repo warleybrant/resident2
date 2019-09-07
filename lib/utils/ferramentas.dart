@@ -179,9 +179,9 @@ class Ferramentas {
     return f;
   }
 
-  static salvarArquivoAsync(
-      String chave, Function(StorageReference, String, File) aoUpload,
-      {Function(double) percentual,
+  static salvarArquivoAsync(String chave,
+      {@required Function(StorageReference, String, File) aoUpload,
+      Function(double) percentual,
       Function(int) falhou,
       File arquivo,
       Uint8List bytes}) {
@@ -259,5 +259,11 @@ class Ferramentas {
 
   String montaNomeArquivo(String nomeBruto) {
     return nomeBruto.replaceAll('/', '__');
+  }
+
+  static Uint8List buscarDaMemoria(String urlFoto) {
+    if (urlFoto == null) return null;
+    if (memoriaCarregada.containsKey(urlFoto)) return memoriaCarregada[urlFoto];
+    return null;
   }
 }

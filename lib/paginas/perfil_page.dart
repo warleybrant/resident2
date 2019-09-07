@@ -288,7 +288,7 @@ class _PerfilPageState extends State<PerfilPage> {
             'fotos_capa/usuarios/${Usuario.logado.id}.png';
         Ferramentas.salvarArquivoAsync(
           caminhoNoServidor,
-          (ref, url, f) {
+          aoUpload: (ref, url, f) {
             Usuario.logado.urlFoto = url;
             Usuario.logado.salvar();
             if (mounted) {

@@ -84,15 +84,24 @@ class _PacientePageState extends State<PacientePage> {
         });
       } else if (mensagem.tipo == TipoMensagem.IMAGEM) {
         widget = BubbleImagem(context, mensagem, () {
+          setState(() {
+            carregando = true;
+          });
           mensagem.recursoMidia.carregar((arquivo) {
             OpenFile.open(arquivo.path).then((a) {
               Navigator.pushNamed(context, Paginas.EXAMES);
             }).then((_) {
+              setState(() {
+                carregando = false;
+              });
               // if (widget.feedback != null) {
               // widget.feedback();
               // }
             });
           }, (erro) {
+            setState(() {
+              carregando = false;
+            });
             print(erro.toString());
           });
         });

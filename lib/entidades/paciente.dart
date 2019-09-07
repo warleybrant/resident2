@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:resident/entidades/audio.dart';
 import 'package:resident/entidades/exame.dart';
 import 'package:resident/entidades/grupo.dart';
@@ -10,7 +8,6 @@ import 'package:resident/entidades/medicamento.dart';
 import 'package:resident/entidades/mensagem.dart';
 import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/padroes.dart';
-import 'package:resident/utils/proxy_storage.dart';
 
 class Paciente {
   static Paciente mostrado;
@@ -52,7 +49,8 @@ class Paciente {
   }
 
   getUrlFoto() {
-    return urlFoto != null ? urlFoto : Padroes.FOTO_PACIENTE_URL;
+    if (urlFoto == null) return 'padroes/paciente_padrao.png';
+    return 'fotos_capa/pacientes/$id.png';
   }
 
   List<Mensagem> getMensagens() {
@@ -88,7 +86,7 @@ class Paciente {
 
     if (bytesFoto != null) {
       Ferramentas.salvarArquivoAsync('fotos_capa/pacientes/$id.png',
-          (ref, url, f) {
+          aoUpload: (ref, url, f) {
         this.urlFoto = url;
         this.salvar();
         aoSalvarFotoNoServidor();

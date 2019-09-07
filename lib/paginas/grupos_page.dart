@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -41,6 +40,12 @@ class _GruposPageState extends State<GruposPage> {
   }
 
   @override
+  void deactivate() {
+    grupos = [];
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
     ProxyFirestore.pararDeObservar(Paginas.GRUPOS);
     super.dispose();
@@ -48,7 +53,9 @@ class _GruposPageState extends State<GruposPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (grupos.length == 0) grupos = Grupo.lista;
     return Scaffold(
+      key: UniqueKey(),
       appBar: AppBar(
         elevation: 5,
         title: Text('Grupos'),
@@ -154,6 +161,7 @@ class _GruposPageState extends State<GruposPage> {
 
   Widget cardGrupo(Grupo grupo) {
     var fotoGrupo = InkWell(
+      key: UniqueKey(),
       child: PhotoCard(
         url: grupo.getUrlFoto(),
         largura: 80,
@@ -173,6 +181,7 @@ class _GruposPageState extends State<GruposPage> {
         });
       },
     );
+
     Widget textoGrupo = Expanded(
       child: MaterialButton(
           child: Text(grupo.nome),

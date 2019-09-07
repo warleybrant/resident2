@@ -41,9 +41,52 @@ class _GrupoPageState extends State<GrupoPage> {
 
   @override
   Widget build(BuildContext context) {
+    return montaPagina();
+  }
+
+  Widget montaPagina() {
+    if (carregando) {
+      return Stack(
+        children: <Widget>[
+          getScaffold(),
+          Opacity(
+            opacity: 0.7,
+            child: Container(
+              color: Colors.black,
+            ),
+          ),
+          getIndicadorProgresso()
+        ],
+      );
+    }
+    return getScaffold();
+  }
+
+  Widget getIndicadorProgresso() {
+    return Center(
+      child: Card(
+        child: Container(
+          width: Tela.x(context, 20),
+          height: Tela.y(context, 10),
+          child: InkWell(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+            onTap: () {
+              setState(() {
+                carregando = false;
+              });
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget getScaffold() {
     return Scaffold(
       appBar: appBar(),
-      body: corpo(),
+      body: getCorpo(),
       floatingActionButton: FloatingActionButton(
           backgroundColor: Color(Cores.FLOATING_BUTTON_BACKGROUND),
           foregroundColor: Color(Cores.FLOATING_BUTTON_FOREGROUND),
@@ -181,7 +224,7 @@ class _GrupoPageState extends State<GrupoPage> {
     );
   }
 
-  Widget corpo() {
+  Widget getCorpo() {
     if (Grupo.mostrado == null) return Container();
     var _lista = <Widget>[];
     _lista.add(ListView(
@@ -377,6 +420,9 @@ class _GrupoPageState extends State<GrupoPage> {
 
   void salvarGrupoESair() {
     if (_formKey.currentState.validate()) {
+      setState(() {
+        carregando = true;
+      });
       if (nomeGrupo.text.isNotEmpty) Grupo.mostrado.nome = nomeGrupo.text;
       if (!contatosSelecionados.contains(Usuario.logado.id))
         contatosSelecionados.add(Usuario.logado.id);
@@ -399,9 +445,6 @@ class _GrupoPageState extends State<GrupoPage> {
               voltar();
             }
           });
-      setState(() {
-        carregando = true;
-      });
       if (_bytesArquivoFoto == null) {
         FocusScope.of(context).requestFocus(new FocusNode());
         voltar();

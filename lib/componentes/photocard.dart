@@ -10,7 +10,13 @@ class PhotoCard extends StatefulWidget {
   final Uint8List bytes;
   final Function(Uint8List) aoExibir;
 
-  PhotoCard({this.url, this.largura, this.altura, this.aoExibir, this.bytes});
+  PhotoCard({
+    this.url,
+    this.largura,
+    this.altura,
+    this.aoExibir,
+    this.bytes,
+  });
   @override
   _PhotoCardState createState() => _PhotoCardState();
 }
@@ -28,11 +34,13 @@ class _PhotoCardState extends State<PhotoCard> {
     if (_bytes == null) {
       carregaArquivo();
     }
-    // if (_bytes != null)
-    //   print('Número de bytes da foto selecionada: ${_bytes.lengthInBytes}');
-    // else
-    //   print('_bytes está nula');
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _bytes = null;
+    super.dispose();
   }
 
   @override
@@ -53,17 +61,20 @@ class _PhotoCardState extends State<PhotoCard> {
 
   carregaArquivo() {
     Ferramentas.carregaArquivoAsync(widget.url, (arquivo) {
-      if (mounted) {
-        setState(() {
+      if (_bytes == null || _bytes.lengthInBytes != arquivo.lengthInBytes) {
+        if (mounted) {
+          setState(() {
+            _bytes = arquivo;
+          });
+        } else {
           _bytes = arquivo;
-        });
-      } else {
-        _bytes = arquivo;
+        }
       }
     });
   }
 
   widgetFotoCarregada() {
+    // print('url: ${widget.url}: bytes: ${_bytes.lengthInBytes}');
     return InkWell(
       child: SizedBox(
         key: UniqueKey(),
@@ -77,6 +88,7 @@ class _PhotoCardState extends State<PhotoCard> {
               fit: BoxFit.fill,
               image: Image.memory(
                 _bytes,
+                key: UniqueKey(),
                 width: _largura,
                 height: _altura,
               ).image,
