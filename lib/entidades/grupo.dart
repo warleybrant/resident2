@@ -39,21 +39,6 @@ class Grupo {
         bytes: bytesFoto,
         percentual: progresso,
       );
-
-      // ProxyStorage.uploadArquivo(
-      //   fotoParaUpload,
-      //   'fotos_capa/grupos/$id.png',
-      //   progresso: progresso,
-      //   aoSubir: (r) {
-      //     var ref =
-      //         FirebaseStorage.instance.ref().child('fotos_capa/grupos/$id.png');
-      //     ref.getDownloadURL().then((_) {
-      //       this.urlFoto = _;
-      //       this.salvar();
-      //       aoSalvarFotoNoServidor();
-      //     });
-      //   },
-      // );
     }
   }
 

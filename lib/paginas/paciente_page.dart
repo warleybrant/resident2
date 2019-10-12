@@ -351,6 +351,11 @@ class _PacientePageState extends State<PacientePage> {
           texto: 'Exames',
           iconeInicio: Icons.assignment,
           vaiPara: Paginas.EXAMES),
+      getOpcaoDrawer(
+          texto: 'Intercorrência',
+          iconeInicio: Icons.add_alert,
+          vaiPara: Paginas.INTERCORRENCIAS,
+          cor: Colors.redAccent),
       // getOpcaoDrawer(texto: 'Alta do paciente', iconeInicio: Icons.accessibility),
     ];
   }
@@ -360,10 +365,21 @@ class _PacientePageState extends State<PacientePage> {
   }
 
   Widget getOpcaoDrawer(
-      {String texto, IconData iconeInicio, IconData iconeFim, String vaiPara}) {
+      {String texto,
+      IconData iconeInicio,
+      IconData iconeFim,
+      String vaiPara,
+      @optionalTypeArgs Color cor}) {
+    // if (cor == null) {
+    //   cor = IconTheme.of(context).color;
+    //   cor = cor.withOpacity(1.0);
+    // }
     return ListTile(
       title: Text(texto),
-      leading: Icon(iconeInicio),
+      leading: Icon(
+        iconeInicio,
+        color: cor,
+      ),
       trailing: Icon(iconeFim),
       onTap: () {
         Navigator.of(context).pop();

@@ -266,4 +266,11 @@ class Ferramentas {
     if (memoriaCarregada.containsKey(urlFoto)) return memoriaCarregada[urlFoto];
     return null;
   }
+
+  static void snack(BuildContext context, String texto) {
+    Scaffold.of(context).showSnackBar(SnackBar(
+      content: Text(texto),
+      duration: Duration(milliseconds: 360),
+    ));
+  }
 }

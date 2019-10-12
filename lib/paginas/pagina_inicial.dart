@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+// import 'package:permission/permission.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/proxy_firestore.dart';
@@ -24,7 +25,7 @@ class _PaginaInicialState extends State<PaginaInicial> {
 
   @override
   void initState() {
-    // controlaPermissoes();
+    // carregaPermissoes();
     controlaNotificacoes();
     ProxyFirestore.observarUmaVez('inicial', () {
       buscaUsuarioLogado().then((usuario) {
@@ -98,6 +99,22 @@ class _PaginaInicialState extends State<PaginaInicial> {
       Usuario.logado.salvar();
     });
   }
+
+  // void carregaPermissoes() async {
+  //   var permissions = await Permission.getPermissionsStatus([
+  //     PermissionName.Storage,
+  //     PermissionName.Contacts,
+  //     PermissionName.Camera
+  //   ]);
+
+  //   var permissionNames = await Permission.requestPermissions([
+  //     PermissionName.Storage,
+  //     PermissionName.Contacts,
+  //     PermissionName.Camera
+  //   ]);
+
+  //   Permission.openSettings;
+  // }
 
   // Future<Null> carregaPermissoes() async {
   //   permCamera = await SimplePermissions.checkPermission(Permission.Camera);
