@@ -22,7 +22,12 @@ dependencies:
   cupertino_icons: ^0.1.2
   cloud_firestore: ^0.12.9
   firebase_core: ^0.4.0+8
-  firebase_auth: ^0.14.0
+  # firebase_auth: ^0.14.0+5
+  firebase_auth:
+    git:
+      url: https://github.com/collinjackson/plugins.git
+      ref: 441417c2fed0ff26bf84a49ab2c5ffd2aa5487de
+      path: packages/firebase_auth
   firebase_storage: ^3.0.4
   firebase_messaging: ^5.1.2
   firebase_analytics: ^4.0.2
@@ -42,7 +47,8 @@ dependencies:
   open_file: ^2.0.3
   url_launcher: ^5.1.2
   # contacts_service: ^0.3.4
-  # permission: ^0.1.3
+  permission: ^0.1.3
+  pin_input_text_field: ^2.0.2
   # simple_permissions: ^0.1.9
 #  flutter_record: ^0.3.1
 #  rich_alert 0.1.32 

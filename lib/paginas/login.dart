@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
+import 'package:pin_input_text_field/pin_input_text_field.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
@@ -20,14 +21,16 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   AuthException excessaoAuth;
-  String verificationId;
+  String _verificationId;
   FirebaseUser usuario;
   var _formKey = GlobalKey<FormState>();
   TextEditingController _smsCodeController = TextEditingController();
+  TextEditingController _pinController = TextEditingController(text: '');
   var telefoneController =
       new MaskedTextController(mask: '+55 (00) 00000-0000', text: '+55');
   final String testSmsCode = '888888';
   bool carregando = false;
+  bool _sms = true;
 
   @override
   Widget build(BuildContext context) {
@@ -77,11 +80,27 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget getScaffold() {
     return Scaffold(
-      backgroundColor: Colors.teal,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 40),
-        child: listaContatosWidgets(),
-      ),
+      backgroundColor: Colors.teal[50],
+      body: _getCorpo(),
+    );
+  }
+
+  Widget _getCorpo() {
+    // if (_sms) return pinView();
+    return Stack(
+      children: <Widget>[
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 40),
+          child: listaContatosWidgets(),
+        ),
+        Opacity(
+          opacity: 0.92,
+          child: Container(
+            color: Colors.white,
+          ),
+        ),
+        pinView(),
+      ],
     );
   }
 
@@ -145,6 +164,16 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget pinView() {
+    return PinInputTextField(
+      pinLength: 6,
+      controller: _pinController,
+      autoFocus: true,
+      keyboardType: TextInputType.number,
+      onSubmit: (digitado) {},
+    );
+  }
+
   Widget textoLogin() {
     return Text(
       'Login',
@@ -173,7 +202,7 @@ class _LoginPageState extends State<LoginPage> {
         (AuthCredential authCredential) {
       print('##### $authCredential #####');
       _auth.signInWithCredential(authCredential).then((_) {
-        FirebaseUser user = _.user;
+        FirebaseUser user = _;
         if (carregando) {
           Usuario usuario = Usuario.buscaPorTelefone(user.phoneNumber);
           if (usuario == null) {
@@ -197,43 +226,45 @@ class _LoginPageState extends State<LoginPage> {
 
     final PhoneVerificationFailed verificationFailed =
         (AuthException authException) {
+      excessaoAuth = authException;
       setState(() {
         carregando = false;
-        excessaoAuth = authException;
-        if (authException.code == 'quotaExceeded') {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text(
-                'Todas as chamadas deste dispositivo foram bloqueadas por atividade não usual. Tente novamente mais tarde'),
-          ));
-        } else if (authException.code == 'invalidPhoneNumber') {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text('Número de telefone inválido'),
-          ));
-        } else {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text(authException.message),
-          ));
-        }
-        print(excessaoAuth.message);
       });
+      if (authException.code == 'quotaExceeded') {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Todas as chamadas deste dispositivo foram bloqueadas por atividade não usual. Tente novamente mais tarde'),
+        ));
+      } else if (authException.code == 'invalidPhoneNumber') {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text('Número de telefone inválido'),
+        ));
+      } else {
+        print(authException.message);
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text(authException.message),
+        ));
+      }
+      print(excessaoAuth.message);
     };
 
     final PhoneCodeSent codeSent =
         (String verificationId, [int forceResendingToken]) async {
-      // setState(() {
-      //   carregado = false;
-      // });
-      this.verificationId = verificationId;
-      _smsCodeController.text = testSmsCode;
-      detectaEmulador();
+      setState(() {
+        carregando = false;
+      });
+      print(verificationId);
+      print(forceResendingToken);
+      this._verificationId = verificationId;
     };
 
     final PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout =
         (String verificationId) {
-      // setState(() {
-      //   carregado = false;
-      // });
-      this.verificationId = verificationId;
+      setState(() {
+        carregando = false;
+      });
+      print(verificationId);
+      this._verificationId = verificationId;
       _smsCodeController.text = testSmsCode;
       detectaEmulador();
     };
@@ -243,7 +274,7 @@ class _LoginPageState extends State<LoginPage> {
     });
     await _auth.verifyPhoneNumber(
       phoneNumber: telefoneFormatado(),
-      timeout: const Duration(seconds: 5),
+      timeout: const Duration(seconds: 120),
       verificationCompleted: verificationCompleted,
       verificationFailed: verificationFailed,
       codeSent: codeSent,

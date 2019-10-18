@@ -1,10 +1,10 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-// import 'package:permission/permission.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/proxy_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission/permission.dart';
 // import 'package:simple_permissions/simple_permissions.dart';
 // import 'package:flutter/services.dart';
 
@@ -25,7 +25,7 @@ class _PaginaInicialState extends State<PaginaInicial> {
 
   @override
   void initState() {
-    // carregaPermissoes();
+    carregaPermissoes();
     controlaNotificacoes();
     ProxyFirestore.observarUmaVez('inicial', () {
       buscaUsuarioLogado().then((usuario) {
@@ -100,21 +100,25 @@ class _PaginaInicialState extends State<PaginaInicial> {
     });
   }
 
-  // void carregaPermissoes() async {
-  //   var permissions = await Permission.getPermissionsStatus([
-  //     PermissionName.Storage,
-  //     PermissionName.Contacts,
-  //     PermissionName.Camera
-  //   ]);
+  void carregaPermissoes() async {
+    var permissions = await Permission.getPermissionsStatus([
+      PermissionName.Storage,
+      PermissionName.Contacts,
+      // PermissionName.Camera
+    ]);
 
-  //   var permissionNames = await Permission.requestPermissions([
-  //     PermissionName.Storage,
-  //     PermissionName.Contacts,
-  //     PermissionName.Camera
-  //   ]);
+    List<PermissionName> permissoes = [];
+    permissions.forEach((permission) {
+      if (permission.permissionStatus.index != 0)
+        permissoes.add(permission.permissionName);
+    });
 
-  //   Permission.openSettings;
-  // }
+    if (permissoes.length > 0) {
+      var permissionNames = await Permission.requestPermissions(permissoes);
+
+      Permission.openSettings;
+    }
+  }
 
   // Future<Null> carregaPermissoes() async {
   //   permCamera = await SimplePermissions.checkPermission(Permission.Camera);

@@ -27,7 +27,7 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    DownloadUpload.carregarPaths().then((_) {});
+    // DownloadUpload.carregarPaths().then((_) {});
     Firestore.instance.settings(persistenceEnabled: false);
     Ferramentas.init();
     final ThemeData base = ThemeData.light();
