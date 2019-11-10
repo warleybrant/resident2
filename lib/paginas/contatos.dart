@@ -1,11 +1,14 @@
 // import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
+import 'package:resident/componentes/photocard.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/cores.dart';
+import 'package:resident/utils/ferramentas.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
 import 'package:universal_widget/universal_widget.dart';
+// import 'package:contacts_service/contacts_service.dart';
 
 class ContatosPage extends StatefulWidget {
   ContatosPage();
@@ -21,6 +24,7 @@ class _ContatosPageState extends State<ContatosPage> {
   TextEditingController buscaContatoController =
       TextEditingController(text: '');
   Usuario contatoEncontrado;
+  bool _carregando = false;
   TextEditingController telefoneContatoContr = TextEditingController(text: '');
   var telefoneController =
       new MaskedTextController(mask: '+55 (00) 00000-0000', text: '+55');
@@ -39,12 +43,14 @@ class _ContatosPageState extends State<ContatosPage> {
     List<Widget> lista = [];
     lista.add(paginaScaffold());
     popup = popupAddContato();
-    if (popup != null) {
-      lista.add(modalPopup());
-      lista.add(popup);
-    } else if (deleteContato != null) {
-      lista.add(modalPopup());
-      lista.add(deleteContato);
+    if (!_carregando) {
+      if (popup != null) {
+        lista.add(modalPopup());
+        lista.add(popup);
+      } else if (deleteContato != null) {
+        lista.add(modalPopup());
+        lista.add(deleteContato);
+      }
     }
     return Stack(
       children: lista,
@@ -76,6 +82,16 @@ class _ContatosPageState extends State<ContatosPage> {
 
   Widget corpo() {
     var lista = listaContatos();
+    if (_carregando) {
+      lista.add(Ferramentas.loading(aoTocar: () {
+        setState(() {
+          _carregando = false;
+        });
+      }));
+      return Stack(
+        children: lista,
+      );
+    }
     return ListView(
       children: lista,
     );
@@ -246,9 +262,66 @@ class _ContatosPageState extends State<ContatosPage> {
         ),
       ),
       color: Colors.yellow,
-      onPressed: () {},
+      onPressed: () {
+        // importarContatos();
+      },
     );
   }
+
+//   Future<Null> importarContatos() async {
+// // Get all contacts on device
+//     setState(() {
+//       _carregando = true;
+//     });
+//     Iterable<Contact> contacts =
+//         await ContactsService.getContacts().catchError((err) {
+//       setState(() {
+//         _carregando = false;
+//       });
+//     });
+//     List<String> telefones = [];
+//     contacts.forEach((contato) {
+//       contato.phones.toList().forEach((telefone) {
+//         String fone = telefone.value;
+//         Ferramentas.soNumeros(fone);
+//         if (!telefones.contains(fone)) telefones.add(fone);
+//       });
+//     });
+
+//     Firestore.instance.collection('usuarios').getDocuments().catchError((err) {
+//       print(err);
+//       setState(() {
+//         _carregando = false;
+//       });
+//     }).then((snap) {
+//       List<Usuario> allUsers = [];
+//       snap.documents.forEach((documento) {
+//         allUsers.add(Usuario.deSnap(documento));
+//       });
+//       telefones.forEach((tel) {
+//         String telefone = Ferramentas.soNumeros(tel);
+//         int tamanho = telefone.length;
+//         String telefoneFormatado = '';
+//         if (telefone.length >= 8) {
+//           telefoneFormatado = telefone.substring(tamanho - 8, tamanho);
+//           Usuario usuario = allUsers.firstWhere(
+//               (Usuario contato) => contato.telefone.endsWith(telefoneFormatado),
+//               orElse: () => null);
+//           if (usuario != null) {
+//             if (usuario.id != Usuario.logado.id) {
+//               if (!Usuario.logado.contemContato(usuario))
+//                 Usuario.logado.addContato(usuario);
+//             }
+//           }
+//         }
+//       });
+//     }).whenComplete(() {
+//       setState(() {
+//         Usuario.logado.salvar();
+//         _carregando = false;
+//       });
+//     });
+//   }
 
   List<Widget> listaContatos() {
     List<Widget> contatosCards = [];
@@ -375,16 +448,17 @@ class _ContatosPageState extends State<ContatosPage> {
 
   Widget fotoContato(Usuario contato) {
     // if (contato.urlFoto == null) return Icon(Icons.account_circle);
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        image: DecorationImage(
-          fit: BoxFit.cover,
-          image: NetworkImage(contato.getUrlFoto()),
-        ),
-      ),
+    return PhotoCard(
+      url: contato.getUrlFoto(),
+      largura: 80,
+      altura: 80,
+      aoExibir: (bytes) {
+        if (mounted) {
+          setState(() {
+            // _bytesFotoMostrar = bytes;
+          });
+        }
+      },
     );
   }
 

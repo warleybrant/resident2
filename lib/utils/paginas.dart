@@ -13,5 +13,6 @@ class Paginas {
   static const String HDA = 'HDA';
   static const String EXAMES = 'EXAMES';
   static const String MEDICAMENTOS = 'MEDICAMENTOS';
+  static const String INTERCORRENCIAS = 'INTERCORRENCIAS';
   // static PageController paginador;
 }

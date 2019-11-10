@@ -101,6 +101,13 @@ class Usuario {
         orElse: () => null);
   }
 
+  bool contemContato(Usuario contato) {
+    for (int i = 0; i < contatos.length; i++) {
+      if (contatos[i] == contato.id) return true;
+    }
+    return false;
+  }
+
   void addContato(Usuario contatoEncontrado) {
     if (!contatos.contains(contatoEncontrado)) {
       List<dynamic> novaLista = [];

@@ -288,6 +288,7 @@ class _PacienteConfigPageState extends State<PacienteConfigPage> {
         validator: (_) {
           if (_.isEmpty) return "Nome não pode ser vazio";
           if (_.length < 3) return "Nome muito curto";
+          return null;
         },
         decoration: getDecoracaoCampo(label: 'Nome:'),
       ),

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_masked_text/flutter_masked_text.dart';
+import 'package:pin_code_text_field/pin_code_text_field.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/tela.dart';
@@ -20,14 +21,16 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   AuthException excessaoAuth;
-  String verificationId;
+  String _verificationId;
   FirebaseUser usuario;
   var _formKey = GlobalKey<FormState>();
-  TextEditingController _smsCodeController = TextEditingController();
+  TextEditingController _smsCodeController = TextEditingController(text: '');
+  TextEditingController _pinController = TextEditingController(text: '');
   var telefoneController =
       new MaskedTextController(mask: '+55 (00) 00000-0000', text: '+55');
   final String testSmsCode = '888888';
   bool carregando = false;
+  bool _sms = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
         children: <Widget>[
           getScaffold(),
           Opacity(
-            opacity: 0.7,
+            opacity: 1,
             child: Container(
               color: Colors.black,
             ),
@@ -77,24 +80,55 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget getScaffold() {
     return Scaffold(
-      backgroundColor: Colors.teal,
-      body: Padding(
+      backgroundColor: Colors.teal[300],
+      body: _getCorpo(),
+    );
+  }
+
+  Widget _getCorpo() {
+    List<Widget> lista = [
+      Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
         child: listaContatosWidgets(),
-      ),
+      )
+    ];
+    if (_sms) {
+      lista.add(
+        Opacity(
+          opacity: 0.8,
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                cancelaSms();
+              });
+            },
+            child: Container(
+              color: Colors.black,
+            ),
+          ),
+        ),
+      );
+      lista.add(pinView());
+    }
+    return Stack(
+      children: lista,
     );
   }
 
   Widget listaContatosWidgets() {
+    var lista = <Widget>[
+      avatarResidente(),
+      colunaCampoTelefone(),
+      botaoLogin()
+    ];
+    if (_verificationId != null) {
+      lista.add(botaoDigitarPin());
+    }
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.max,
-      children: <Widget>[
-        avatarResidente(),
-        colunaCampoTelefone(),
-        botaoLogin()
-      ],
+      children: lista,
     );
   }
 
@@ -145,6 +179,48 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget pinView() {
+    return Center(
+      child: Card(
+        child: Container(
+          width: Tela.x(context, 70),
+          height: Tela.y(context, 12),
+          color: Colors.white,
+          child: Center(
+            child: PinCodeTextField(
+              autofocus: true,
+              controller: _smsCodeController,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              pinBoxWidth: 40,
+              defaultBorderColor: Colors.blueGrey,
+              hasTextBorderColor: Colors.cyanAccent,
+              // highlightColor: Colors.white,
+              highlight: true,
+              pinBoxDecoration:
+                  ProvidedPinBoxDecoration.defaultPinBoxDecoration,
+              pinTextStyle: TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold),
+              onDone: (_) {
+                AuthCredential auth = PhoneAuthProvider.getCredential(
+                    smsCode: _, verificationId: _verificationId);
+                FirebaseAuth.instance
+                    .signInWithCredential(auth)
+                    .catchError((_) {
+                  print(_);
+                }).then((_) {
+                  loginComFirebaseUser(_);
+                });
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget textoLogin() {
     return Text(
       'Login',
@@ -167,73 +243,73 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Widget botaoDigitarPin() {
+    return RaisedButton(
+      child: textoDigitarSms(),
+      padding: EdgeInsets.symmetric(
+          horizontal: Tela.x(context, 10), vertical: Tela.y(context, 1)),
+      onPressed: () {
+        setState(() {
+          _sms = true;
+        });
+      },
+    );
+  }
+
+  Widget textoDigitarSms() {
+    return Text('Digitar o Código');
+  }
+
   Future<void> _testVerifyPhoneNumber() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
     final PhoneVerificationCompleted verificationCompleted =
         (AuthCredential authCredential) {
       print('##### $authCredential #####');
       _auth.signInWithCredential(authCredential).then((_) {
-        FirebaseUser user = _.user;
-        if (carregando) {
-          Usuario usuario = Usuario.buscaPorTelefone(user.phoneNumber);
-          if (usuario == null) {
-            usuario = new Usuario(
-                id: user.uid,
-                nome: '',
-                uid: user.uid,
-                telefone: telefoneFormatado(),
-                urlFoto: null,
-                idResidente: telefoneFormatado(),
-                contatos: []);
-            usuario.salvar();
-          }
-          Usuario.logado = usuario;
-          prefs.setString('usuarioLogado', user.uid);
-          Navigator.pushNamedAndRemoveUntil(
-              context, Paginas.INICIAL, (r) => false);
-        }
+        loginComFirebaseUser(_);
       });
     };
 
     final PhoneVerificationFailed verificationFailed =
         (AuthException authException) {
+      excessaoAuth = authException;
       setState(() {
         carregando = false;
-        excessaoAuth = authException;
-        if (authException.code == 'quotaExceeded') {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text(
-                'Todas as chamadas deste dispositivo foram bloqueadas por atividade não usual. Tente novamente mais tarde'),
-          ));
-        } else if (authException.code == 'invalidPhoneNumber') {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text('Número de telefone inválido'),
-          ));
-        } else {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text(authException.message),
-          ));
-        }
-        print(excessaoAuth.message);
       });
+      if (authException.code == 'quotaExceeded') {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text(
+              'Todas as chamadas deste dispositivo foram bloqueadas por atividade não usual. Tente novamente mais tarde'),
+        ));
+      } else if (authException.code == 'invalidPhoneNumber') {
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text('Número de telefone inválido'),
+        ));
+      } else {
+        print(authException.message);
+        Scaffold.of(context).showSnackBar(SnackBar(
+          content: Text(authException.message),
+        ));
+      }
+      print(excessaoAuth.message);
     };
 
     final PhoneCodeSent codeSent =
         (String verificationId, [int forceResendingToken]) async {
-      // setState(() {
-      //   carregado = false;
-      // });
-      this.verificationId = verificationId;
-      _smsCodeController.text = testSmsCode;
-      detectaEmulador();
+      setState(() {
+        // carregando = false;
+        this._verificationId = verificationId;
+      });
+      print(verificationId);
+      print(forceResendingToken);
     };
 
     final PhoneCodeAutoRetrievalTimeout codeAutoRetrievalTimeout =
         (String verificationId) {
-      // setState(() {
-      //   carregado = false;
-      // });
-      this.verificationId = verificationId;
+      setState(() {
+        carregando = false;
+      });
+      print(verificationId);
+      this._verificationId = verificationId;
       _smsCodeController.text = testSmsCode;
       detectaEmulador();
     };
@@ -243,7 +319,7 @@ class _LoginPageState extends State<LoginPage> {
     });
     await _auth.verifyPhoneNumber(
       phoneNumber: telefoneFormatado(),
-      timeout: const Duration(seconds: 5),
+      timeout: const Duration(seconds: 120),
       verificationCompleted: verificationCompleted,
       verificationFailed: verificationFailed,
       codeSent: codeSent,
@@ -268,6 +344,11 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void cancelaSms() {
+    _sms = false;
+    _smsCodeController.text = '';
+  }
+
   void loginSimulado() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     Usuario teste = Usuario.buscaPorTelefone('+5531000000000');
@@ -284,6 +365,27 @@ class _LoginPageState extends State<LoginPage> {
           uid: '000000000000000');
       teste.salvar();
     }
+  }
+
+  void loginComFirebaseUser(FirebaseUser user) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // if (carregando) {
+    Usuario usuario = Usuario.buscaPorTelefone(user.phoneNumber);
+    if (usuario == null) {
+      usuario = new Usuario(
+          id: user.uid,
+          nome: '',
+          uid: user.uid,
+          telefone: telefoneFormatado(),
+          urlFoto: null,
+          idResidente: telefoneFormatado(),
+          contatos: []);
+      usuario.salvar();
+    }
+    Usuario.logado = usuario;
+    prefs.setString('usuarioLogado', user.uid);
+    Navigator.pushNamedAndRemoveUntil(context, Paginas.INICIAL, (r) => false);
+    // }
   }
 
   String telefoneFormatado() {

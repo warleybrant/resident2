@@ -6,7 +6,7 @@ import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/componentes/photocard.dart';
 import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/paciente.dart';
-import 'package:resident/utils/ferramentas.dart';
+import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/paginas.dart';
 import 'package:resident/utils/proxy_firestore.dart';
 
@@ -45,6 +45,7 @@ class _PacientesPageState extends State<PacientesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: GlobalKey(),
       appBar: AppBar(
         title: Text('${Grupo.mostrado.nome}'),
         leading: IconButton(
@@ -145,7 +146,32 @@ class _PacientesPageState extends State<PacientesPage> {
         Navigator.pushNamed(context, Paginas.PACIENTE_CONFIG);
       },
     );
-    List<Widget> lista = [fotoPaciente, textoPaciente, configuracoesPaciente];
+    bool notificando = paciente.usuariosNotificar.contains(Usuario.logado.uid);
+    Color cor = notificando ? Colors.redAccent : Color(0xFF3d5f52);
+    Widget notificacoesPaciente = RaisedButton(
+      shape: CircleBorder(),
+      color: cor,
+      child: Icon(
+        notificando ? Icons.notifications_active : Icons.notifications_none,
+        color: Colors.teal[50],
+      ),
+      onPressed: () {
+        if (notificando) {
+          paciente.naoNotificar(Usuario.logado.uid);
+        } else {
+          paciente.notificar(Usuario.logado.uid);
+        }
+        setState(() {
+          paciente.salvar();
+        });
+      },
+    );
+    List<Widget> lista = [
+      fotoPaciente,
+      textoPaciente,
+      configuracoesPaciente,
+      notificacoesPaciente
+    ];
     return Card(
       key: Key(paciente.id),
       elevation: 5,
@@ -173,7 +199,7 @@ class _PacientesPageState extends State<PacientesPage> {
   }
 
   void criarPaciente() {
-    Paciente.mostrado = Paciente();
+    Paciente.mostrado = Paciente(grupo: Grupo.mostrado);
     Navigator.pushNamed(context, Paginas.PACIENTE_CONFIG);
   }
 }

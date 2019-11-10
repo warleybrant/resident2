@@ -7,6 +7,7 @@ import 'package:resident/paginas/grupos_page.dart';
 import 'package:resident/paginas/hd_page.dart';
 import 'package:resident/paginas/hda_page.dart';
 import 'package:resident/paginas/hp_page.dart';
+import 'package:resident/paginas/intercorrencias_page.dart';
 import 'package:resident/paginas/login.dart';
 import 'package:resident/paginas/medicamentos_page.dart';
 import 'package:resident/paginas/paciente_config.dart';
@@ -26,7 +27,7 @@ Future<void> main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    DownloadUpload.carregarPaths().then((_) {});
+    // DownloadUpload.carregarPaths().then((_) {});
     Firestore.instance.settings(persistenceEnabled: false);
     Ferramentas.init();
     final ThemeData base = ThemeData.light();
@@ -61,7 +62,8 @@ class MyApp extends StatelessWidget {
         Paginas.HD: (context) => HDPage(),
         Paginas.HDA: (context) => HDAPage(),
         Paginas.HP: (context) => HPPage(),
-        Paginas.MEDICAMENTOS: (context) => MedicamentosPage()
+        Paginas.MEDICAMENTOS: (context) => MedicamentosPage(),
+        Paginas.INTERCORRENCIAS: (context) => IntercorrenciasPage(),
       },
     );
   }

@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:resident/componentes/avatar_alteravel.dart';
 import 'package:resident/componentes/exibe_imagem.dart';
 import 'package:resident/componentes/photocard.dart';
 import 'package:resident/entidades/grupo.dart';
+import 'package:resident/entidades/paciente.dart';
 import 'package:resident/entidades/usuario.dart';
 import 'package:resident/utils/cores.dart';
 import 'package:resident/utils/paginas.dart';
@@ -29,6 +31,7 @@ class _GrupoPageState extends State<GrupoPage> {
   final _formKey = GlobalKey<FormState>();
   String urlFotoMostrando;
   Uint8List _bytesFotoMostrar;
+  List<String> _usuariosNotificar = [];
 
   @override
   void initState() {
@@ -408,9 +411,11 @@ class _GrupoPageState extends State<GrupoPage> {
             if (_) {
               if (!contatosSelecionados.contains(contato.id)) {
                 contatosSelecionados.add(contato.id);
+                _usuariosNotificar.add(contato.id);
               }
             } else {
               contatosSelecionados.remove(contato.id);
+              _usuariosNotificar.remove(contato.id);
             }
           });
         },
@@ -445,6 +450,19 @@ class _GrupoPageState extends State<GrupoPage> {
               voltar();
             }
           });
+      Firestore.instance
+          .collection('pacientes')
+          .where('grupo')
+          .getDocuments()
+          .then((snap) {
+        snap.documents.forEach((doc) {
+          var paciente = Paciente.buscaPorId(doc.documentID);
+          if (!paciente.usuariosNotificar.contains(Usuario.logado.id)) {
+            paciente.usuariosNotificar.add(Usuario.logado.id);
+            paciente.salvar();
+          }
+        });
+      });
       if (_bytesArquivoFoto == null) {
         FocusScope.of(context).requestFocus(new FocusNode());
         voltar();

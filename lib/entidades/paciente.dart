@@ -7,7 +7,6 @@ import 'package:resident/entidades/grupo.dart';
 import 'package:resident/entidades/medicamento.dart';
 import 'package:resident/entidades/mensagem.dart';
 import 'package:resident/utils/ferramentas.dart';
-import 'package:resident/utils/padroes.dart';
 
 class Paciente {
   static Paciente mostrado;
@@ -25,6 +24,7 @@ class Paciente {
   List<Medicamento> _medicamentos = [];
   List<Exame> _exames = [];
   List<Audio> _audios = [];
+  List usuariosNotificar;
   bool alta = false;
 
   Paciente({
@@ -38,7 +38,15 @@ class Paciente {
     this.hda,
     this.hp,
     this.urlFoto,
-  });
+    this.usuariosNotificar,
+  }) {
+    if (usuariosNotificar == null) {
+      usuariosNotificar = [];
+      grupo.contatos.forEach((contato) {
+        usuariosNotificar.add(contato);
+      });
+    }
+  }
 
   static List<Paciente> getTodosOsPacientes() {
     var lista = <Paciente>[];
@@ -148,6 +156,7 @@ class Paciente {
       'hd': hd,
       'urlFoto': urlFoto,
       'alta': alta,
+      'usuariosNotificar': usuariosNotificar,
     });
   }
 
@@ -186,6 +195,22 @@ class Paciente {
     return hdStr;
   }
 
+  void notificar(String usuarioId) {
+    List _usersNot = List.from(usuariosNotificar);
+    if (!_usersNot.contains(usuarioId)) {
+      _usersNot.add(usuarioId);
+    }
+    usuariosNotificar = _usersNot;
+  }
+
+  void naoNotificar(String usuarioId) {
+    List _usersNot = List.from(usuariosNotificar);
+    if (_usersNot.contains(usuarioId)) {
+      _usersNot.remove(usuarioId);
+    }
+    usuariosNotificar = _usersNot;
+  }
+
   void deletar() {
     getAudios().forEach((audio) {
       audio.deletar();
@@ -201,15 +226,17 @@ class Paciente {
 
   static Paciente deSnap(DocumentSnapshot documento) {
     return Paciente(
-        id: documento.documentID,
-        nome: documento.data['nome'],
-        grupo: Grupo.buscaPorId(documento.data['grupo']),
-        telefone: documento.data['telefone'],
-        entrada: Ferramentas.millisecondsParaData(documento.data['entrada']),
-        hp: documento.data['hp'],
-        hda: documento.data['hda'],
-        hd: documento.data['hd'],
-        alta: documento.data['alta'],
-        urlFoto: documento.data['urlFoto']);
+      id: documento.documentID,
+      nome: documento.data['nome'],
+      grupo: Grupo.buscaPorId(documento.data['grupo']),
+      telefone: documento.data['telefone'],
+      entrada: Ferramentas.millisecondsParaData(documento.data['entrada']),
+      hp: documento.data['hp'],
+      hda: documento.data['hda'],
+      hd: documento.data['hd'],
+      alta: documento.data['alta'],
+      urlFoto: documento.data['urlFoto'],
+      usuariosNotificar: documento.data['usuariosNotificar'],
+    );
   }
 }
